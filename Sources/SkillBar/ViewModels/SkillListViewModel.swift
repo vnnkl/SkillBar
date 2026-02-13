@@ -12,6 +12,7 @@ final class SkillListViewModel {
     private let scanner: SkillScanning
     private let clipboard: ClipboardProvider
     private var clearCopyTask: Task<Void, Never>?
+    private var fileWatcher: FileWatching?
 
     var totalCount: Int { skills.count }
 
@@ -33,6 +34,21 @@ final class SkillListViewModel {
             guard !Task.isCancelled else { return }
             recentlyCopiedSkillId = nil
         }
+    }
+
+    func startWatching(_ watcher: FileWatching) {
+        fileWatcher?.stop()
+        fileWatcher = watcher
+        watcher.start(onChange: { [weak self] in
+            Task { @MainActor in
+                self?.scan()
+            }
+        })
+    }
+
+    func stopWatching() {
+        fileWatcher?.stop()
+        fileWatcher = nil
     }
 
     func scan() {

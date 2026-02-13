@@ -7,6 +7,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
     private(set) var statusItem: NSStatusItem?
     private(set) var popover: NSPopover?
     private(set) var viewModel: SkillListViewModel?
+    private var fileWatcher: FileWatcher?
     private var hotkeyRef: EventHotKeyRef?
     private var eventHandlerRef: EventHandlerRef?
 
@@ -15,10 +16,13 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
         setupViewModel()
         setupStatusItem()
         setupPopover()
+        setupFileWatcher()
         registerHotkey()
     }
 
     func applicationWillTerminate(_ notification: Notification) {
+        viewModel?.stopWatching()
+        fileWatcher = nil
         unregisterHotkey()
     }
 
@@ -31,6 +35,13 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
             scanDirectories: Constants.scanDirectories
         )
         viewModel = SkillListViewModel(scanner: scanner)
+    }
+
+    private func setupFileWatcher() {
+        guard let viewModel else { return }
+        let watcher = FileWatcher(directories: Constants.scanDirectories)
+        fileWatcher = watcher
+        viewModel.startWatching(watcher)
     }
 
     private func setupStatusItem() {

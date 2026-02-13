@@ -362,4 +362,61 @@ struct SkillListViewModelTests {
 
         #expect(vm.filteredOrderedSources == [.local])
     }
+
+    // MARK: - File Watcher
+
+    @Test("startWatching starts the file watcher")
+    func startWatchingStartsWatcher() {
+        let scanner = makeMockScanner()
+        let watcher = MockFileWatcher()
+        let vm = SkillListViewModel(scanner: scanner)
+
+        vm.startWatching(watcher)
+
+        #expect(watcher.startCallCount == 1)
+    }
+
+    @Test("stopWatching stops the file watcher")
+    func stopWatchingStopsWatcher() {
+        let scanner = makeMockScanner()
+        let watcher = MockFileWatcher()
+        let vm = SkillListViewModel(scanner: scanner)
+
+        vm.startWatching(watcher)
+        vm.stopWatching()
+
+        #expect(watcher.stopCallCount == 1)
+    }
+
+    @Test("File watcher onChange triggers rescan")
+    func fileWatcherOnChangeTriggersScan() async throws {
+        let scanner = makeMockScanner(skills: [makeSkill(name: "a")])
+        let watcher = MockFileWatcher()
+        let vm = SkillListViewModel(scanner: scanner)
+
+        vm.startWatching(watcher)
+        #expect(scanner.scanCallCount == 0)
+
+        watcher.simulateChange()
+
+        // Yield to allow the MainActor task to execute
+        try await Task.sleep(for: .milliseconds(10))
+
+        #expect(scanner.scanCallCount == 1)
+        #expect(vm.skills.count == 1)
+    }
+
+    @Test("Starting a new watcher stops the previous one")
+    func startWatchingStopsPreviousWatcher() {
+        let scanner = makeMockScanner()
+        let watcher1 = MockFileWatcher()
+        let watcher2 = MockFileWatcher()
+        let vm = SkillListViewModel(scanner: scanner)
+
+        vm.startWatching(watcher1)
+        vm.startWatching(watcher2)
+
+        #expect(watcher1.stopCallCount == 1)
+        #expect(watcher2.startCallCount == 1)
+    }
 }
