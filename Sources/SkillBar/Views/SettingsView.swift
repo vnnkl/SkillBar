@@ -1,3 +1,4 @@
+import ServiceManagement
 import SwiftUI
 
 struct SettingsView: View {
@@ -5,12 +6,24 @@ struct SettingsView: View {
     let onClearFavorites: () -> Void
     let onBack: () -> Void
 
+    @State private var launchAtLogin = false
+    @State private var launchAtLoginError: String?
+
+    private var isAppBundle: Bool {
+        Bundle.main.bundlePath.hasSuffix(".app")
+    }
+
     var body: some View {
         VStack(spacing: 0) {
             settingsHeader
             Divider()
             settingsContent
             Spacer()
+        }
+        .onAppear {
+            if isAppBundle {
+                launchAtLogin = SMAppService.mainApp.status == .enabled
+            }
         }
     }
 
@@ -44,14 +57,30 @@ struct SettingsView: View {
 
     private var launchAtLoginSection: some View {
         VStack(alignment: .leading, spacing: 6) {
-            HStack {
+            if isAppBundle {
+                Toggle("Launch at Login", isOn: Binding(
+                    get: { launchAtLogin },
+                    set: { toggleLaunchAtLogin($0) }
+                ))
+                .toggleStyle(.switch)
+
+                if let error = launchAtLoginError {
+                    Text(error)
+                        .font(.caption)
+                        .foregroundStyle(.red)
+                } else {
+                    Text("Automatically start SkillBar when you log in.")
+                        .font(.caption)
+                        .foregroundStyle(.secondary)
+                }
+            } else {
                 Toggle("Launch at Login", isOn: .constant(false))
                     .toggleStyle(.switch)
                     .disabled(true)
+                Text("Requires app bundle (.app). Build with Scripts/package_app.sh")
+                    .font(.caption)
+                    .foregroundStyle(.secondary)
             }
-            Text("Requires app bundling (.app). Available in a future release.")
-                .font(.caption)
-                .foregroundStyle(.secondary)
         }
     }
 
@@ -71,6 +100,20 @@ struct SettingsView: View {
             Text("Remove all pinned skills from the favorites section.")
                 .font(.caption)
                 .foregroundStyle(.secondary)
+        }
+    }
+
+    private func toggleLaunchAtLogin(_ enabled: Bool) {
+        launchAtLoginError = nil
+        do {
+            if enabled {
+                try SMAppService.mainApp.register()
+            } else {
+                try SMAppService.mainApp.unregister()
+            }
+            launchAtLogin = enabled
+        } catch {
+            launchAtLoginError = "Failed to \(enabled ? "enable" : "disable"): \(error.localizedDescription)"
         }
     }
 }
