@@ -278,4 +278,229 @@ struct SkillScannerTests {
         // Skills without a frontmatter name should be skipped (PRD says parse name from frontmatter)
         #expect(skills.isEmpty)
     }
+
+    // MARK: - Recursive Plugin Scanning
+
+    @Test("Finds deeply nested SKILL.md in cache directory")
+    func findsDeeplyNestedPluginSkills() throws {
+        let cacheDir = "/home/.claude/plugins/cache"
+        let skillFile = "\(cacheDir)/npm/compound-engineering/1.0.0/skills/plan/SKILL.md"
+        let fs = makeMockFS(
+            directories: [
+                cacheDir: ["npm"],
+                "\(cacheDir)/npm": ["compound-engineering"],
+                "\(cacheDir)/npm/compound-engineering": ["1.0.0"],
+                "\(cacheDir)/npm/compound-engineering/1.0.0": ["skills"],
+                "\(cacheDir)/npm/compound-engineering/1.0.0/skills": ["plan"],
+                "\(cacheDir)/npm/compound-engineering/1.0.0/skills/plan": ["SKILL.md"]
+            ],
+            files: [
+                skillFile: makeSkillContent(name: "plan", description: "Planning skill.")
+            ]
+        )
+
+        let scanner = SkillScanner(fileSystem: fs, scanDirectories: [cacheDir])
+        let skills = try scanner.scan()
+
+        #expect(skills.count == 1)
+        #expect(skills[0].name == "compound-engineering:plan")
+        #expect(skills[0].description == "Planning skill.")
+        #expect(skills[0].source == .pluginCache)
+    }
+
+    @Test("Extracts package from cache path with semver version")
+    func extractsPackageFromCachePath() {
+        let scanner = SkillScanner(fileSystem: makeMockFS(), scanDirectories: [])
+        let path = "/home/.claude/plugins/cache/npm/my-pkg/1.0.0/skills/plan/SKILL.md"
+
+        let pkg = scanner.extractPackageFromSkillPath(path)
+
+        #expect(pkg == "my-pkg")
+    }
+
+    @Test("Extracts package from cache path with hex hash version")
+    func extractsPackageFromCachePathWithHash() {
+        let scanner = SkillScanner(fileSystem: makeMockFS(), scanDirectories: [])
+        let path = "/home/.claude/plugins/cache/npm/my-pkg/a1b2c3d4e5f6/skills/review/SKILL.md"
+
+        let pkg = scanner.extractPackageFromSkillPath(path)
+
+        #expect(pkg == "my-pkg")
+    }
+
+    @Test("Extracts package from marketplace path (no version)")
+    func extractsPackageFromMarketplacePath() {
+        let scanner = SkillScanner(fileSystem: makeMockFS(), scanDirectories: [])
+        let path = "/home/.claude/plugins/marketplaces/compound-engineering/skills/tdd/SKILL.md"
+
+        let pkg = scanner.extractPackageFromSkillPath(path)
+
+        #expect(pkg == "compound-engineering")
+    }
+
+    @Test("Prefixes skill name with package name")
+    func prefixesSkillNameWithPackage() throws {
+        let mpDir = "/home/.claude/plugins/marketplaces"
+        let skillFile = "\(mpDir)/my-tools/skills/lint/SKILL.md"
+        let fs = makeMockFS(
+            directories: [
+                mpDir: ["my-tools"],
+                "\(mpDir)/my-tools": ["skills"],
+                "\(mpDir)/my-tools/skills": ["lint"],
+                "\(mpDir)/my-tools/skills/lint": ["SKILL.md"]
+            ],
+            files: [
+                skillFile: makeSkillContent(name: "lint", description: "Lint code.")
+            ]
+        )
+
+        let scanner = SkillScanner(fileSystem: fs, scanDirectories: [mpDir])
+        let skills = try scanner.scan()
+
+        #expect(skills.count == 1)
+        #expect(skills[0].name == "my-tools:lint")
+        #expect(skills[0].package == "my-tools")
+        #expect(skills[0].displayName == "lint")
+    }
+
+    @Test("Skips temp_git_* directories during recursive scan")
+    func skipsTempGitDirectories() throws {
+        let cacheDir = "/home/.claude/plugins/cache"
+        let fs = makeMockFS(
+            directories: [
+                cacheDir: ["temp_git_abc123", "legit-pkg"],
+                "\(cacheDir)/temp_git_abc123": ["skills"],
+                "\(cacheDir)/temp_git_abc123/skills": ["bad"],
+                "\(cacheDir)/temp_git_abc123/skills/bad": ["SKILL.md"],
+                "\(cacheDir)/legit-pkg": ["skills"],
+                "\(cacheDir)/legit-pkg/skills": ["good"],
+                "\(cacheDir)/legit-pkg/skills/good": ["SKILL.md"]
+            ],
+            files: [
+                "\(cacheDir)/temp_git_abc123/skills/bad/SKILL.md": makeSkillContent(name: "bad", description: "Bad."),
+                "\(cacheDir)/legit-pkg/skills/good/SKILL.md": makeSkillContent(name: "good", description: "Good.")
+            ]
+        )
+
+        let scanner = SkillScanner(fileSystem: fs, scanDirectories: [cacheDir])
+        let skills = try scanner.scan()
+
+        #expect(skills.count == 1)
+        #expect(skills[0].name == "legit-pkg:good")
+    }
+
+    @Test("Skips hidden directories during recursive scan")
+    func skipsHiddenDirectories() throws {
+        let cacheDir = "/home/.claude/plugins/cache"
+        let fs = makeMockFS(
+            directories: [
+                cacheDir: [".hidden", "visible-pkg"],
+                "\(cacheDir)/.hidden": ["skills"],
+                "\(cacheDir)/.hidden/skills": ["secret"],
+                "\(cacheDir)/.hidden/skills/secret": ["SKILL.md"],
+                "\(cacheDir)/visible-pkg": ["skills"],
+                "\(cacheDir)/visible-pkg/skills": ["public"],
+                "\(cacheDir)/visible-pkg/skills/public": ["SKILL.md"]
+            ],
+            files: [
+                "\(cacheDir)/.hidden/skills/secret/SKILL.md": makeSkillContent(name: "secret", description: "Hidden."),
+                "\(cacheDir)/visible-pkg/skills/public/SKILL.md": makeSkillContent(name: "public", description: "Visible.")
+            ]
+        )
+
+        let scanner = SkillScanner(fileSystem: fs, scanDirectories: [cacheDir])
+        let skills = try scanner.scan()
+
+        #expect(skills.count == 1)
+        #expect(skills[0].name == "visible-pkg:public")
+    }
+
+    @Test("Finds multiple skills within same package")
+    func findsMultipleSkillsInPackage() throws {
+        let cacheDir = "/home/.claude/plugins/cache"
+        let base = "\(cacheDir)/npm/multi-tool/2.0.0/skills"
+        let fs = makeMockFS(
+            directories: [
+                cacheDir: ["npm"],
+                "\(cacheDir)/npm": ["multi-tool"],
+                "\(cacheDir)/npm/multi-tool": ["2.0.0"],
+                "\(cacheDir)/npm/multi-tool/2.0.0": ["skills"],
+                base: ["lint", "format", "test"],
+                "\(base)/lint": ["SKILL.md"],
+                "\(base)/format": ["SKILL.md"],
+                "\(base)/test": ["SKILL.md"]
+            ],
+            files: [
+                "\(base)/lint/SKILL.md": makeSkillContent(name: "lint", description: "Lint."),
+                "\(base)/format/SKILL.md": makeSkillContent(name: "format", description: "Format."),
+                "\(base)/test/SKILL.md": makeSkillContent(name: "test", description: "Test.")
+            ]
+        )
+
+        let scanner = SkillScanner(fileSystem: fs, scanDirectories: [cacheDir])
+        let skills = try scanner.scan()
+
+        #expect(skills.count == 3)
+        let names = Set(skills.map(\.name))
+        #expect(names == ["multi-tool:lint", "multi-tool:format", "multi-tool:test"])
+    }
+
+    // MARK: - Version Detection
+
+    @Test("Recognizes semver strings as version-like")
+    func recognizesSemver() {
+        let scanner = SkillScanner(fileSystem: makeMockFS(), scanDirectories: [])
+        #expect(scanner.isVersionLike("1.0.0") == true)
+        #expect(scanner.isVersionLike("2.3.1") == true)
+        #expect(scanner.isVersionLike("10.20.30") == true)
+    }
+
+    @Test("Recognizes hex hashes as version-like")
+    func recognizesHexHashes() {
+        let scanner = SkillScanner(fileSystem: makeMockFS(), scanDirectories: [])
+        #expect(scanner.isVersionLike("a1b2c3d4") == true)
+        #expect(scanner.isVersionLike("deadbeef01234567") == true)
+    }
+
+    @Test("Rejects non-version strings")
+    func rejectsNonVersionStrings() {
+        let scanner = SkillScanner(fileSystem: makeMockFS(), scanDirectories: [])
+        #expect(scanner.isVersionLike("compound-engineering") == false)
+        #expect(scanner.isVersionLike("npm") == false)
+        #expect(scanner.isVersionLike("skills") == false)
+        #expect(scanner.isVersionLike("abc") == false)
+    }
+
+    // MARK: - Dedup: Local vs Plugin
+
+    @Test("Local skill wins over plugin skill with same prefixed name")
+    func localWinsOverPluginWithSameName() throws {
+        let localDir = "/home/.claude/skills"
+        let cacheDir = "/home/.claude/plugins/cache"
+        let fs = makeMockFS(
+            directories: [
+                localDir: ["pkg:plan"],
+                "\(localDir)/pkg:plan": ["SKILL.md"],
+                cacheDir: ["pkg"],
+                "\(cacheDir)/pkg": ["skills"],
+                "\(cacheDir)/pkg/skills": ["plan"],
+                "\(cacheDir)/pkg/skills/plan": ["SKILL.md"]
+            ],
+            files: [
+                "\(localDir)/pkg:plan/SKILL.md": makeSkillContent(name: "pkg:plan", description: "Local override."),
+                "\(cacheDir)/pkg/skills/plan/SKILL.md": makeSkillContent(name: "plan", description: "Plugin version.")
+            ]
+        )
+
+        let scanner = SkillScanner(
+            fileSystem: fs,
+            scanDirectories: [localDir, cacheDir]
+        )
+        let skills = try scanner.scan()
+
+        let planSkills = skills.filter { $0.name == "pkg:plan" }
+        #expect(planSkills.count == 1)
+        #expect(planSkills[0].source == .local)
+        #expect(planSkills[0].description == "Local override.")
+    }
 }

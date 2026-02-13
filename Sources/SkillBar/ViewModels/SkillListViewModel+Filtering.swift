@@ -26,6 +26,24 @@ extension SkillListViewModel {
         return SkillSource.allCases.filter { filtered[$0] != nil }
     }
 
+    var filteredPackageGroupedSkills: [String: [Skill]] {
+        var groups: [String: [Skill]] = [:]
+        for skill in filteredSkills {
+            let key = skill.package ?? Constants.standalonePackageKey
+            var group = groups[key, default: []]
+            group.append(skill)
+            groups[key] = group
+        }
+        for (key, items) in groups {
+            groups[key] = items.sorted { $0.displayName < $1.displayName }
+        }
+        return groups
+    }
+
+    var filteredOrderedPackages: [String] {
+        filteredPackageGroupedSkills.keys.sorted()
+    }
+
     // MARK: - Private
 
     private func matchesSearch(_ skill: Skill) -> Bool {
@@ -33,6 +51,7 @@ extension SkillListViewModel {
         let query = searchText.lowercased()
         return skill.name.lowercased().contains(query)
             || skill.description.lowercased().contains(query)
+            || (skill.package?.lowercased().contains(query) ?? false)
     }
 
     private func matchesSourceFilter(_ skill: Skill) -> Bool {

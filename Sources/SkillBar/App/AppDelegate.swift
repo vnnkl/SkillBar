@@ -48,8 +48,9 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
         let item = NSStatusBar.system.statusItem(withLength: NSStatusItem.squareLength)
         if let button = item.button {
             button.image = NSImage(systemSymbolName: "terminal", accessibilityDescription: "SkillBar")
-            button.action = #selector(togglePopover)
+            button.action = #selector(statusItemClicked)
             button.target = self
+            button.sendAction(on: [.leftMouseUp, .rightMouseUp])
         }
         statusItem = item
     }
@@ -62,9 +63,13 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
             height: Constants.popoverHeight
         )
         pop.behavior = .transient
-        pop.contentViewController = NSHostingController(
+        let hostingController = NSHostingController(
             rootView: SkillListView(viewModel: viewModel)
         )
+        hostingController.sizingOptions = .preferredContentSize
+        hostingController.view.wantsLayer = true
+        hostingController.view.layer?.backgroundColor = .clear
+        pop.contentViewController = hostingController
         popover = pop
     }
 
@@ -76,7 +81,6 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
             eventKind: UInt32(kEventHotKeyPressed)
         )
 
-        // Install a Carbon event handler that dispatches back to the main actor
         let selfPtr = Unmanaged.passUnretained(self).toOpaque()
         var handlerRef: EventHandlerRef?
         InstallEventHandler(
@@ -96,7 +100,6 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
         )
         eventHandlerRef = handlerRef
 
-        // Register the hotkey
         let hotkeyID = Constants.hotkeyID
         var ref: EventHotKeyRef?
         RegisterEventHotKey(
@@ -121,7 +124,16 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
         }
     }
 
-    // MARK: - Toggle
+    // MARK: - Status Item Actions
+
+    @objc func statusItemClicked() {
+        guard let event = NSApp.currentEvent else { return }
+        if event.type == .rightMouseUp {
+            showContextMenu()
+        } else {
+            togglePopover()
+        }
+    }
 
     @objc func togglePopover() {
         guard let popover, let button = statusItem?.button else { return }
@@ -131,5 +143,15 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
             popover.show(relativeTo: button.bounds, of: button, preferredEdge: .minY)
             NSApp.activate()
         }
+    }
+
+    private func showContextMenu() {
+        guard let button = statusItem?.button else { return }
+        let menu = NSMenu()
+        menu.addItem(withTitle: "Quit SkillBar", action: #selector(NSApplication.terminate(_:)), keyEquivalent: "q")
+        statusItem?.menu = menu
+        button.performClick(nil)
+        // Clear menu so left-click goes back to showing popover
+        statusItem?.menu = nil
     }
 }

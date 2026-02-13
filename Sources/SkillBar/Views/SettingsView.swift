@@ -19,8 +19,9 @@ struct SettingsView: View {
             Button(action: onBack) {
                 Image(systemName: "chevron.left")
                     .font(.caption.weight(.semibold))
+                    .frame(width: Constants.buttonMinSize, height: Constants.buttonMinSize)
             }
-            .buttonStyle(.plain)
+            .buttonStyle(GlassButtonStyle())
 
             Text("Settings")
                 .font(.headline)
@@ -29,6 +30,7 @@ struct SettingsView: View {
         }
         .padding(.horizontal, 12)
         .padding(.vertical, 8)
+        .background(.ultraThinMaterial)
     }
 
     private var settingsContent: some View {
