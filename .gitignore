@@ -1,8 +1,8 @@
-# Ralph Pipeline state (regenerated each run)
+# Dev tooling artifacts
+.beads/
+.ralph-tui/
+.claude/settings.json
 .claude/pipeline/
-
-# Ralph TUI iterations (large, generated)
-.ralph-tui/iterations/
 
 # OS
 .DS_Store
