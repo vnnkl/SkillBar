@@ -16,6 +16,12 @@ enum Constants {
     static let favoritesKey = "favoriteSkillNames"
     static let debounceInterval: TimeInterval = 0.5
 
+    // Design
+    static let cornerRadius: CGFloat = 6
+    static let buttonMinSize: CGFloat = 28
+    static let standalonePackageKey = "Standalone"
+    static let detailPanelWidth: CGFloat = 420
+
     static var scanDirectories: [String] {
         let home = FileManager.default.homeDirectoryForCurrentUser.path
         return [
