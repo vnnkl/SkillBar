@@ -8,8 +8,16 @@ final class SkillListViewModel {
     private(set) var recentlyCopiedSkillId: Skill.ID?
     private(set) var selectedSkill: Skill?
     var favoriteNames: Set<String> = []
-    var searchText: String = ""
+    var selectedIndex: Int? = nil
     var activeSourceFilter: SkillSource? = nil
+
+    var searchText: String = "" {
+        didSet {
+            if searchText != oldValue {
+                selectedIndex = nil
+            }
+        }
+    }
 
     private let scanner: SkillScanning
     private let clipboard: ClipboardProvider

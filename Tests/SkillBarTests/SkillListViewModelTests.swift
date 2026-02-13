@@ -476,4 +476,160 @@ struct SkillListViewModelTests {
 
         #expect(content.contains("Could not read"))
     }
+
+    // MARK: - Keyboard Navigation
+
+    @Test("selectedIndex is nil by default")
+    func selectedIndexDefaultsToNil() {
+        let vm = SkillListViewModel(scanner: makeMockScanner())
+        #expect(vm.selectedIndex == nil)
+    }
+
+    @Test("moveDown selects first item when no selection")
+    func moveDownSelectsFirstItem() {
+        let skills = [makeSkill(name: "a"), makeSkill(name: "b"), makeSkill(name: "c")]
+        let vm = SkillListViewModel(scanner: makeMockScanner(skills: skills))
+        vm.scan()
+
+        vm.moveDown()
+
+        #expect(vm.selectedIndex == 0)
+    }
+
+    @Test("moveDown advances to next item")
+    func moveDownAdvancesToNext() {
+        let skills = [makeSkill(name: "a"), makeSkill(name: "b"), makeSkill(name: "c")]
+        let vm = SkillListViewModel(scanner: makeMockScanner(skills: skills))
+        vm.scan()
+
+        vm.moveDown()
+        vm.moveDown()
+
+        #expect(vm.selectedIndex == 1)
+    }
+
+    @Test("moveDown wraps to first item at end of list")
+    func moveDownWrapsAtEnd() {
+        let skills = [makeSkill(name: "a"), makeSkill(name: "b")]
+        let vm = SkillListViewModel(scanner: makeMockScanner(skills: skills))
+        vm.scan()
+
+        vm.moveDown()  // 0
+        vm.moveDown()  // 1
+        vm.moveDown()  // wraps to 0
+
+        #expect(vm.selectedIndex == 0)
+    }
+
+    @Test("moveUp selects last item when no selection")
+    func moveUpSelectsLastItem() {
+        let skills = [makeSkill(name: "a"), makeSkill(name: "b"), makeSkill(name: "c")]
+        let vm = SkillListViewModel(scanner: makeMockScanner(skills: skills))
+        vm.scan()
+
+        vm.moveUp()
+
+        #expect(vm.selectedIndex == 2)
+    }
+
+    @Test("moveUp moves to previous item")
+    func moveUpMovesToPrevious() {
+        let skills = [makeSkill(name: "a"), makeSkill(name: "b"), makeSkill(name: "c")]
+        let vm = SkillListViewModel(scanner: makeMockScanner(skills: skills))
+        vm.scan()
+
+        vm.moveDown()  // 0
+        vm.moveDown()  // 1
+        vm.moveUp()    // 0
+
+        #expect(vm.selectedIndex == 0)
+    }
+
+    @Test("moveUp wraps to last item at beginning of list")
+    func moveUpWrapsAtBeginning() {
+        let skills = [makeSkill(name: "a"), makeSkill(name: "b"), makeSkill(name: "c")]
+        let vm = SkillListViewModel(scanner: makeMockScanner(skills: skills))
+        vm.scan()
+
+        vm.moveDown()  // 0
+        vm.moveUp()    // wraps to 2
+
+        #expect(vm.selectedIndex == 2)
+    }
+
+    @Test("confirmSelection copies selected skill")
+    func confirmSelectionCopiesSkill() {
+        let mockClipboard = MockClipboard()
+        let skills = [makeSkill(name: "commit"), makeSkill(name: "tdd")]
+        let vm = SkillListViewModel(scanner: makeMockScanner(skills: skills), clipboard: mockClipboard)
+        vm.scan()
+
+        vm.moveDown()  // select index 0
+        vm.confirmSelection()
+
+        #expect(mockClipboard.copyCallCount == 1)
+    }
+
+    @Test("confirmSelection does nothing with no selection")
+    func confirmSelectionDoesNothingWithNoSelection() {
+        let mockClipboard = MockClipboard()
+        let skills = [makeSkill(name: "commit")]
+        let vm = SkillListViewModel(scanner: makeMockScanner(skills: skills), clipboard: mockClipboard)
+        vm.scan()
+
+        vm.confirmSelection()
+
+        #expect(mockClipboard.copyCallCount == 0)
+    }
+
+    @Test("moveDown does nothing with empty list")
+    func moveDownDoesNothingWhenEmpty() {
+        let vm = SkillListViewModel(scanner: makeMockScanner())
+        vm.scan()
+
+        vm.moveDown()
+
+        #expect(vm.selectedIndex == nil)
+    }
+
+    @Test("moveUp does nothing with empty list")
+    func moveUpDoesNothingWhenEmpty() {
+        let vm = SkillListViewModel(scanner: makeMockScanner())
+        vm.scan()
+
+        vm.moveUp()
+
+        #expect(vm.selectedIndex == nil)
+    }
+
+    @Test("Navigation uses filteredSkills order")
+    func navigationUsesFilteredSkills() {
+        let mockClipboard = MockClipboard()
+        let skills = [
+            makeSkill(name: "commit", description: "git"),
+            makeSkill(name: "tdd", description: "testing"),
+            makeSkill(name: "review", description: "code review")
+        ]
+        let vm = SkillListViewModel(scanner: makeMockScanner(skills: skills), clipboard: mockClipboard)
+        vm.scan()
+
+        vm.searchText = "commit"
+        vm.moveDown()  // select first filtered item
+        vm.confirmSelection()
+
+        #expect(mockClipboard.lastCopiedString == "/commit")
+    }
+
+    @Test("Selection resets when search text changes")
+    func selectionResetsOnSearchChange() {
+        let skills = [makeSkill(name: "a"), makeSkill(name: "b")]
+        let vm = SkillListViewModel(scanner: makeMockScanner(skills: skills))
+        vm.scan()
+
+        vm.moveDown()
+        #expect(vm.selectedIndex == 0)
+
+        vm.searchText = "b"
+        #expect(vm.selectedIndex == nil)
+    }
 }

@@ -2,6 +2,7 @@ import SwiftUI
 
 struct SkillListView: View {
     @Bindable var viewModel: SkillListViewModel
+    @FocusState private var isSearchFocused: Bool
 
     var body: some View {
         Group {
@@ -18,6 +19,30 @@ struct SkillListView: View {
         .frame(width: Constants.popoverWidth, height: Constants.popoverHeight)
         .onAppear {
             viewModel.scan()
+            viewModel.clearSelection()
+            isSearchFocused = true
+        }
+        .onKeyPress(.downArrow) {
+            viewModel.moveDown()
+            return .handled
+        }
+        .onKeyPress(.upArrow) {
+            viewModel.moveUp()
+            return .handled
+        }
+        .onKeyPress(.return) {
+            viewModel.confirmSelection()
+            return .handled
+        }
+        .onKeyPress(.tab) {
+            if isSearchFocused {
+                isSearchFocused = false
+                if viewModel.selectedIndex == nil {
+                    viewModel.moveDown()
+                }
+                return .handled
+            }
+            return .ignored
         }
     }
 
@@ -55,6 +80,7 @@ struct SkillListView: View {
             TextField("Search skills...", text: $viewModel.searchText)
                 .textFieldStyle(.plain)
                 .font(.body)
+                .focused($isSearchFocused)
         }
         .padding(.horizontal, 10)
         .padding(.vertical, 6)
@@ -130,7 +156,8 @@ struct SkillListView: View {
     }
 
     private func skillRow(_ skill: Skill) -> some View {
-        SkillRowView(
+        let isSelected = isSkillSelected(skill)
+        return SkillRowView(
             skill: skill,
             isCopied: viewModel.recentlyCopiedSkillId == skill.id,
             isFavorite: viewModel.isFavorite(skill),
@@ -138,6 +165,13 @@ struct SkillListView: View {
             onDetail: { viewModel.selectSkillForDetail(skill) },
             onToggleFavorite: { viewModel.toggleFavorite(skill) }
         )
+        .listRowBackground(isSelected ? Color.accentColor.opacity(0.15) : Color.clear)
+    }
+
+    private func isSkillSelected(_ skill: Skill) -> Bool {
+        guard let index = viewModel.selectedIndex else { return false }
+        let list = viewModel.filteredSkills
+        return index < list.count && list[index].id == skill.id
     }
 
     private var footer: some View {
