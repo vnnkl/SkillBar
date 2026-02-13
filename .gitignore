@@ -1,0 +1,30 @@
+# Ralph Pipeline state (regenerated each run)
+.claude/pipeline/
+
+# Ralph TUI iterations (large, generated)
+.ralph-tui/iterations/
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Editor
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# Environment
+.env
+.env.local
+.env.*.local
+
+# Dependencies
+node_modules/
+
+# Build
+dist/
+build/
+.build/
+.next/
+.swiftpm/
