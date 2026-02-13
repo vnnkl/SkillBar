@@ -5,11 +5,22 @@ import SwiftUI
 final class AppDelegate: NSObject, NSApplicationDelegate {
     private(set) var statusItem: NSStatusItem?
     private(set) var popover: NSPopover?
+    private(set) var viewModel: SkillListViewModel?
 
     func applicationDidFinishLaunching(_ notification: Notification) {
         NSApp.setActivationPolicy(.accessory)
+        setupViewModel()
         setupStatusItem()
         setupPopover()
+    }
+
+    private func setupViewModel() {
+        let fileSystem = DefaultFileSystemProvider()
+        let scanner = SkillScanner(
+            fileSystem: fileSystem,
+            scanDirectories: Constants.scanDirectories
+        )
+        viewModel = SkillListViewModel(scanner: scanner)
     }
 
     private func setupStatusItem() {
@@ -23,10 +34,16 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
     }
 
     private func setupPopover() {
+        guard let viewModel else { return }
         let pop = NSPopover()
-        pop.contentSize = NSSize(width: 400, height: 500)
+        pop.contentSize = NSSize(
+            width: Constants.popoverWidth,
+            height: Constants.popoverHeight
+        )
         pop.behavior = .transient
-        pop.contentViewController = NSHostingController(rootView: PlaceholderView())
+        pop.contentViewController = NSHostingController(
+            rootView: SkillListView(viewModel: viewModel)
+        )
         popover = pop
     }
 
