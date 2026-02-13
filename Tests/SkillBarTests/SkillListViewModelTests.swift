@@ -187,4 +187,179 @@ struct SkillListViewModelTests {
 
         #expect(mockClipboard.lastCopiedString?.hasPrefix("/") == true)
     }
+
+    // MARK: - Search
+
+    @Test("Search filters skills by name")
+    func searchFiltersByName() {
+        let skills = [
+            makeSkill(name: "commit"),
+            makeSkill(name: "tdd"),
+            makeSkill(name: "review-pr")
+        ]
+        let scanner = makeMockScanner(skills: skills)
+        let vm = SkillListViewModel(scanner: scanner)
+        vm.scan()
+
+        vm.searchText = "commit"
+
+        #expect(vm.filteredSkills.count == 1)
+        #expect(vm.filteredSkills.first?.name == "commit")
+    }
+
+    @Test("Search filters skills by description")
+    func searchFiltersByDescription() {
+        let skills = [
+            makeSkill(name: "commit", description: "Git commit helper"),
+            makeSkill(name: "tdd", description: "Test-driven development"),
+            makeSkill(name: "review", description: "Code review tool")
+        ]
+        let scanner = makeMockScanner(skills: skills)
+        let vm = SkillListViewModel(scanner: scanner)
+        vm.scan()
+
+        vm.searchText = "test"
+
+        #expect(vm.filteredSkills.count == 1)
+        #expect(vm.filteredSkills.first?.name == "tdd")
+    }
+
+    @Test("Search is case-insensitive")
+    func searchIsCaseInsensitive() {
+        let skills = [
+            makeSkill(name: "Commit"),
+            makeSkill(name: "tdd")
+        ]
+        let scanner = makeMockScanner(skills: skills)
+        let vm = SkillListViewModel(scanner: scanner)
+        vm.scan()
+
+        vm.searchText = "commit"
+
+        #expect(vm.filteredSkills.count == 1)
+    }
+
+    @Test("Empty search shows all skills")
+    func emptySearchShowsAll() {
+        let skills = [
+            makeSkill(name: "commit"),
+            makeSkill(name: "tdd")
+        ]
+        let scanner = makeMockScanner(skills: skills)
+        let vm = SkillListViewModel(scanner: scanner)
+        vm.scan()
+
+        vm.searchText = ""
+
+        #expect(vm.filteredSkills.count == 2)
+    }
+
+    // MARK: - Source Filter
+
+    @Test("Source filter shows only matching source")
+    func sourceFilterShowsMatchingSource() {
+        let skills = [
+            makeSkill(name: "local-skill", source: .local),
+            makeSkill(name: "plugin-skill", source: .pluginCache),
+            makeSkill(name: "linked-skill", source: .symlink)
+        ]
+        let scanner = makeMockScanner(skills: skills)
+        let vm = SkillListViewModel(scanner: scanner)
+        vm.scan()
+
+        vm.activeSourceFilter = .local
+
+        #expect(vm.filteredSkills.count == 1)
+        #expect(vm.filteredSkills.first?.source == .local)
+    }
+
+    @Test("Nil source filter shows all skills")
+    func nilSourceFilterShowsAll() {
+        let skills = [
+            makeSkill(name: "a", source: .local),
+            makeSkill(name: "b", source: .pluginCache)
+        ]
+        let scanner = makeMockScanner(skills: skills)
+        let vm = SkillListViewModel(scanner: scanner)
+        vm.scan()
+
+        vm.activeSourceFilter = nil
+
+        #expect(vm.filteredSkills.count == 2)
+    }
+
+    // MARK: - Composed Filters
+
+    @Test("Search and source filter compose together")
+    func searchAndSourceFilterCompose() {
+        let skills = [
+            makeSkill(name: "commit", description: "Git helper", source: .local),
+            makeSkill(name: "tdd", description: "Testing", source: .local),
+            makeSkill(name: "commit-plugin", description: "Plugin commit", source: .pluginCache)
+        ]
+        let scanner = makeMockScanner(skills: skills)
+        let vm = SkillListViewModel(scanner: scanner)
+        vm.scan()
+
+        vm.searchText = "commit"
+        vm.activeSourceFilter = .local
+
+        #expect(vm.filteredSkills.count == 1)
+        #expect(vm.filteredSkills.first?.name == "commit")
+    }
+
+    // MARK: - Filtered Count
+
+    @Test("filteredCount reflects filtered skills count")
+    func filteredCountReflectsFilter() {
+        let skills = [
+            makeSkill(name: "a"),
+            makeSkill(name: "b"),
+            makeSkill(name: "c")
+        ]
+        let scanner = makeMockScanner(skills: skills)
+        let vm = SkillListViewModel(scanner: scanner)
+        vm.scan()
+
+        vm.searchText = "a"
+
+        #expect(vm.filteredCount == 1)
+        #expect(vm.totalCount == 3)
+    }
+
+    // MARK: - Filtered Grouped Skills
+
+    @Test("filteredGroupedSkills respects both search and source filter")
+    func filteredGroupedSkillsRespectsBothFilters() {
+        let skills = [
+            makeSkill(name: "commit", source: .local),
+            makeSkill(name: "tdd", source: .local),
+            makeSkill(name: "deploy", source: .pluginCache)
+        ]
+        let scanner = makeMockScanner(skills: skills)
+        let vm = SkillListViewModel(scanner: scanner)
+        vm.scan()
+
+        vm.searchText = ""
+        vm.activeSourceFilter = .local
+
+        let filtered = vm.filteredGroupedSkills
+        #expect(filtered[.local]?.count == 2)
+        #expect(filtered[.pluginCache] == nil)
+    }
+
+    @Test("filteredOrderedSources only includes sources with matching skills")
+    func filteredOrderedSourcesRespectsFilter() {
+        let skills = [
+            makeSkill(name: "a", source: .local),
+            makeSkill(name: "b", source: .pluginCache)
+        ]
+        let scanner = makeMockScanner(skills: skills)
+        let vm = SkillListViewModel(scanner: scanner)
+        vm.scan()
+
+        vm.activeSourceFilter = .local
+
+        #expect(vm.filteredOrderedSources == [.local])
+    }
 }

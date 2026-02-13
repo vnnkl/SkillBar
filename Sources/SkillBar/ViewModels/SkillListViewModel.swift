@@ -6,6 +6,8 @@ final class SkillListViewModel {
     private(set) var skills: [Skill] = []
     private(set) var groupedSkills: [SkillSource: [Skill]] = [:]
     private(set) var recentlyCopiedSkillId: Skill.ID?
+    var searchText: String = ""
+    var activeSourceFilter: SkillSource? = nil
 
     private let scanner: SkillScanning
     private let clipboard: ClipboardProvider
