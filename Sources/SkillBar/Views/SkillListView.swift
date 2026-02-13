@@ -107,16 +107,18 @@ struct SkillListView: View {
                 }
             } else {
                 List {
+                    if !viewModel.filteredFavoritedSkills.isEmpty {
+                        Section("Favorites") {
+                            ForEach(viewModel.filteredFavoritedSkills) { skill in
+                                skillRow(skill)
+                            }
+                        }
+                    }
                     ForEach(viewModel.filteredOrderedSources, id: \.self) { source in
                         if let skills = viewModel.filteredGroupedSkills[source] {
                             Section(source.displayName) {
                                 ForEach(skills) { skill in
-                                    SkillRowView(
-                                        skill: skill,
-                                        isCopied: viewModel.recentlyCopiedSkillId == skill.id,
-                                        onTap: { viewModel.copySkill(skill) },
-                                        onDetail: { viewModel.selectSkillForDetail(skill) }
-                                    )
+                                    skillRow(skill)
                                 }
                             }
                         }
@@ -125,6 +127,17 @@ struct SkillListView: View {
                 .listStyle(.sidebar)
             }
         }
+    }
+
+    private func skillRow(_ skill: Skill) -> some View {
+        SkillRowView(
+            skill: skill,
+            isCopied: viewModel.recentlyCopiedSkillId == skill.id,
+            isFavorite: viewModel.isFavorite(skill),
+            onTap: { viewModel.copySkill(skill) },
+            onDetail: { viewModel.selectSkillForDetail(skill) },
+            onToggleFavorite: { viewModel.toggleFavorite(skill) }
+        )
     }
 
     private var footer: some View {

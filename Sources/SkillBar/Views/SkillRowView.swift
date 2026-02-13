@@ -3,11 +3,20 @@ import SwiftUI
 struct SkillRowView: View {
     let skill: Skill
     let isCopied: Bool
+    let isFavorite: Bool
     let onTap: () -> Void
     let onDetail: () -> Void
+    let onToggleFavorite: () -> Void
 
     var body: some View {
         HStack(spacing: 8) {
+            Button(action: onToggleFavorite) {
+                Image(systemName: isFavorite ? "star.fill" : "star")
+                    .font(.caption)
+                    .foregroundStyle(isFavorite ? .yellow : .secondary)
+            }
+            .buttonStyle(.plain)
+
             VStack(alignment: .leading, spacing: 2) {
                 Text(skill.slashCommand)
                     .font(.body.monospaced().weight(.medium))
@@ -50,5 +59,6 @@ struct SkillRowView: View {
             onTap()
         }
         .animation(.easeInOut(duration: 0.2), value: isCopied)
+        .animation(.easeInOut(duration: 0.2), value: isFavorite)
     }
 }

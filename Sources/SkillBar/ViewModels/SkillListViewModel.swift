@@ -7,12 +7,14 @@ final class SkillListViewModel {
     private(set) var groupedSkills: [SkillSource: [Skill]] = [:]
     private(set) var recentlyCopiedSkillId: Skill.ID?
     private(set) var selectedSkill: Skill?
+    var favoriteNames: Set<String> = []
     var searchText: String = ""
     var activeSourceFilter: SkillSource? = nil
 
     private let scanner: SkillScanning
     private let clipboard: ClipboardProvider
     private let fileSystem: FileSystemProvider
+    let store: KeyValueStore
     private var clearCopyTask: Task<Void, Never>?
     private var fileWatcher: FileWatching?
 
@@ -25,11 +27,16 @@ final class SkillListViewModel {
     init(
         scanner: SkillScanning,
         clipboard: ClipboardProvider = Clipboard(),
-        fileSystem: FileSystemProvider = DefaultFileSystemProvider()
+        fileSystem: FileSystemProvider = DefaultFileSystemProvider(),
+        store: KeyValueStore = UserDefaultsStore()
     ) {
         self.scanner = scanner
         self.clipboard = clipboard
         self.fileSystem = fileSystem
+        self.store = store
+        if let stored = store.array(forKey: Constants.favoritesKey) {
+            self.favoriteNames = Set(stored)
+        }
     }
 
     // MARK: - Detail View

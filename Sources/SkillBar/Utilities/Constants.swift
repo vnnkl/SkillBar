@@ -13,6 +13,7 @@ enum Constants {
     static let carbonHotkeyModifiers: UInt32 = UInt32(cmdKey | shiftKey)
     static let hotkeyID = EventHotKeyID(signature: OSType(0x534B4252), id: 1) // "SKBR"
 
+    static let favoritesKey = "favoriteSkillNames"
     static let debounceInterval: TimeInterval = 0.5
 
     static var scanDirectories: [String] {
