@@ -4,6 +4,7 @@ struct SkillRowView: View {
     let skill: Skill
     let isCopied: Bool
     let onTap: () -> Void
+    let onDetail: () -> Void
 
     var body: some View {
         HStack(spacing: 8) {
@@ -28,6 +29,13 @@ struct SkillRowView: View {
                     .font(.caption)
                     .transition(.scale.combined(with: .opacity))
             }
+
+            Button(action: onDetail) {
+                Image(systemName: "info.circle")
+                    .font(.caption)
+                    .foregroundStyle(.secondary)
+            }
+            .buttonStyle(.plain)
 
             Text(skill.source.displayName)
                 .font(.caption2)

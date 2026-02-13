@@ -419,4 +419,61 @@ struct SkillListViewModelTests {
         #expect(watcher1.stopCallCount == 1)
         #expect(watcher2.startCallCount == 1)
     }
+
+    // MARK: - Detail View
+
+    @Test("selectedSkill is nil by default")
+    func selectedSkillDefaultsToNil() {
+        let vm = SkillListViewModel(scanner: makeMockScanner())
+        #expect(vm.selectedSkill == nil)
+    }
+
+    @Test("selectSkillForDetail sets selectedSkill")
+    func selectSkillForDetailSetsSkill() {
+        let skill = makeSkill(name: "commit")
+        let vm = SkillListViewModel(scanner: makeMockScanner(skills: [skill]))
+        vm.scan()
+
+        vm.selectSkillForDetail(skill)
+
+        #expect(vm.selectedSkill == skill)
+    }
+
+    @Test("dismissDetail clears selectedSkill")
+    func dismissDetailClearsSkill() {
+        let skill = makeSkill(name: "commit")
+        let vm = SkillListViewModel(scanner: makeMockScanner(skills: [skill]))
+        vm.scan()
+
+        vm.selectSkillForDetail(skill)
+        #expect(vm.selectedSkill != nil)
+
+        vm.dismissDetail()
+        #expect(vm.selectedSkill == nil)
+    }
+
+    @Test("readSkillContent returns file content for valid path")
+    func readSkillContentReturnsContent() {
+        let fs = MockFileSystemProvider()
+        fs.files["/path/commit/SKILL.md"] = "# Commit Skill\nDoes things"
+        let scanner = MockSkillScanner()
+        let vm = SkillListViewModel(scanner: scanner, fileSystem: fs)
+        let skill = makeSkill(name: "commit")
+
+        let content = vm.readSkillContent(skill)
+
+        #expect(content == "# Commit Skill\nDoes things")
+    }
+
+    @Test("readSkillContent returns error message when file missing")
+    func readSkillContentReturnsErrorForMissingFile() {
+        let fs = MockFileSystemProvider()
+        let scanner = MockSkillScanner()
+        let vm = SkillListViewModel(scanner: scanner, fileSystem: fs)
+        let skill = makeSkill(name: "gone")
+
+        let content = vm.readSkillContent(skill)
+
+        #expect(content.contains("Could not read"))
+    }
 }

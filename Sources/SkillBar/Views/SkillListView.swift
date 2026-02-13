@@ -4,6 +4,24 @@ struct SkillListView: View {
     @Bindable var viewModel: SkillListViewModel
 
     var body: some View {
+        Group {
+            if let skill = viewModel.selectedSkill {
+                SkillDetailView(
+                    skill: skill,
+                    content: viewModel.readSkillContent(skill),
+                    onBack: { viewModel.dismissDetail() }
+                )
+            } else {
+                listContent
+            }
+        }
+        .frame(width: Constants.popoverWidth, height: Constants.popoverHeight)
+        .onAppear {
+            viewModel.scan()
+        }
+    }
+
+    private var listContent: some View {
         VStack(spacing: 0) {
             header
             searchField
@@ -12,10 +30,6 @@ struct SkillListView: View {
             skillList
             Divider()
             footer
-        }
-        .frame(width: Constants.popoverWidth, height: Constants.popoverHeight)
-        .onAppear {
-            viewModel.scan()
         }
     }
 
@@ -100,7 +114,8 @@ struct SkillListView: View {
                                     SkillRowView(
                                         skill: skill,
                                         isCopied: viewModel.recentlyCopiedSkillId == skill.id,
-                                        onTap: { viewModel.copySkill(skill) }
+                                        onTap: { viewModel.copySkill(skill) },
+                                        onDetail: { viewModel.selectSkillForDetail(skill) }
                                     )
                                 }
                             }
