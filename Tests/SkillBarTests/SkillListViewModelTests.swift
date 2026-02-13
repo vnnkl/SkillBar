@@ -132,4 +132,59 @@ struct SkillListViewModelTests {
         let orderedSources = vm.orderedSources
         #expect(orderedSources == [.local, .symlink, .pluginCache])
     }
+
+    // MARK: - Copy Skill
+
+    @Test("copySkill copies slash command to clipboard")
+    func copySkillCopiesToClipboard() {
+        let mockClipboard = MockClipboard()
+        let skill = makeSkill(name: "commit")
+        let scanner = makeMockScanner(skills: [skill])
+        let vm = SkillListViewModel(scanner: scanner, clipboard: mockClipboard)
+
+        vm.copySkill(skill)
+
+        #expect(mockClipboard.lastCopiedString == "/commit")
+        #expect(mockClipboard.copyCallCount == 1)
+    }
+
+    @Test("copySkill sets recentlyCopiedSkillId")
+    func copySkillSetsRecentId() {
+        let mockClipboard = MockClipboard()
+        let skill = makeSkill(name: "tdd")
+        let scanner = makeMockScanner()
+        let vm = SkillListViewModel(scanner: scanner, clipboard: mockClipboard)
+
+        #expect(vm.recentlyCopiedSkillId == nil)
+        vm.copySkill(skill)
+        #expect(vm.recentlyCopiedSkillId == skill.id)
+    }
+
+    @Test("copySkill updates recentlyCopiedSkillId when copying different skill")
+    func copySkillUpdatesId() {
+        let mockClipboard = MockClipboard()
+        let skill1 = makeSkill(name: "commit")
+        let skill2 = makeSkill(name: "tdd")
+        let scanner = makeMockScanner()
+        let vm = SkillListViewModel(scanner: scanner, clipboard: mockClipboard)
+
+        vm.copySkill(skill1)
+        #expect(vm.recentlyCopiedSkillId == skill1.id)
+
+        vm.copySkill(skill2)
+        #expect(vm.recentlyCopiedSkillId == skill2.id)
+        #expect(mockClipboard.lastCopiedString == "/tdd")
+    }
+
+    @Test("copySkill includes leading slash")
+    func copySkillIncludesSlash() {
+        let mockClipboard = MockClipboard()
+        let skill = makeSkill(name: "review-pr")
+        let scanner = makeMockScanner()
+        let vm = SkillListViewModel(scanner: scanner, clipboard: mockClipboard)
+
+        vm.copySkill(skill)
+
+        #expect(mockClipboard.lastCopiedString?.hasPrefix("/") == true)
+    }
 }

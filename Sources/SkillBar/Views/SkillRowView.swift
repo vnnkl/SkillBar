@@ -2,6 +2,8 @@ import SwiftUI
 
 struct SkillRowView: View {
     let skill: Skill
+    let isCopied: Bool
+    let onTap: () -> Void
 
     var body: some View {
         HStack(spacing: 8) {
@@ -20,6 +22,13 @@ struct SkillRowView: View {
 
             Spacer()
 
+            if isCopied {
+                Image(systemName: "checkmark.circle.fill")
+                    .foregroundStyle(.green)
+                    .font(.caption)
+                    .transition(.scale.combined(with: .opacity))
+            }
+
             Text(skill.source.displayName)
                 .font(.caption2)
                 .padding(.horizontal, 6)
@@ -29,5 +38,9 @@ struct SkillRowView: View {
                 .clipShape(RoundedRectangle(cornerRadius: 4))
         }
         .contentShape(Rectangle())
+        .onTapGesture {
+            onTap()
+        }
+        .animation(.easeInOut(duration: 0.2), value: isCopied)
     }
 }

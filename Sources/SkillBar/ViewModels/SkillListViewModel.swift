@@ -5,8 +5,11 @@ import Foundation
 final class SkillListViewModel {
     private(set) var skills: [Skill] = []
     private(set) var groupedSkills: [SkillSource: [Skill]] = [:]
+    private(set) var recentlyCopiedSkillId: Skill.ID?
 
     private let scanner: SkillScanning
+    private let clipboard: ClipboardProvider
+    private var clearCopyTask: Task<Void, Never>?
 
     var totalCount: Int { skills.count }
 
@@ -14,8 +17,20 @@ final class SkillListViewModel {
         SkillSource.allCases.filter { groupedSkills[$0] != nil }
     }
 
-    init(scanner: SkillScanning) {
+    init(scanner: SkillScanning, clipboard: ClipboardProvider = Clipboard()) {
         self.scanner = scanner
+        self.clipboard = clipboard
+    }
+
+    func copySkill(_ skill: Skill) {
+        clipboard.copy(skill.slashCommand)
+        recentlyCopiedSkillId = skill.id
+        clearCopyTask?.cancel()
+        clearCopyTask = Task {
+            try? await Task.sleep(for: .seconds(1.5))
+            guard !Task.isCancelled else { return }
+            recentlyCopiedSkillId = nil
+        }
     }
 
     func scan() {

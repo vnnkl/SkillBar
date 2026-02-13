@@ -45,7 +45,11 @@ struct SkillListView: View {
                         if let skills = viewModel.groupedSkills[source] {
                             Section(source.displayName) {
                                 ForEach(skills) { skill in
-                                    SkillRowView(skill: skill)
+                                    SkillRowView(
+                                        skill: skill,
+                                        isCopied: viewModel.recentlyCopiedSkillId == skill.id,
+                                        onTap: { viewModel.copySkill(skill) }
+                                    )
                                 }
                             }
                         }
