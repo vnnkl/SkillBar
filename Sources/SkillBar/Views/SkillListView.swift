@@ -12,6 +12,12 @@ struct SkillListView: View {
                     content: viewModel.readSkillContent(skill),
                     onBack: { viewModel.dismissDetail() }
                 )
+            } else if viewModel.showSettings {
+                SettingsView(
+                    hasFavorites: viewModel.hasFavorites,
+                    onClearFavorites: { viewModel.clearFavorites() },
+                    onBack: { viewModel.showSettings = false }
+                )
             } else {
                 listContent
             }
@@ -186,6 +192,12 @@ struct SkillListView: View {
                     .foregroundStyle(.secondary)
             }
             Spacer()
+            Button(action: { viewModel.showSettings = true }) {
+                Image(systemName: "gear")
+                    .font(.caption)
+                    .foregroundStyle(.secondary)
+            }
+            .buttonStyle(.plain)
         }
         .padding(.horizontal, 12)
         .padding(.vertical, 6)

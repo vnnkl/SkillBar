@@ -7,6 +7,7 @@ final class SkillListViewModel {
     private(set) var groupedSkills: [SkillSource: [Skill]] = [:]
     private(set) var recentlyCopiedSkillId: Skill.ID?
     private(set) var selectedSkill: Skill?
+    var showSettings: Bool = false
     var favoriteNames: Set<String> = []
     var selectedIndex: Int? = nil
     var activeSourceFilter: SkillSource? = nil

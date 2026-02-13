@@ -632,4 +632,41 @@ struct SkillListViewModelTests {
         vm.searchText = "b"
         #expect(vm.selectedIndex == nil)
     }
+
+    // MARK: - Settings
+
+    @Test("showSettings is false by default")
+    func showSettingsDefaultsToFalse() {
+        let vm = SkillListViewModel(scanner: makeMockScanner())
+        #expect(vm.showSettings == false)
+    }
+
+    @Test("showSettings can be toggled")
+    func showSettingsCanBeToggled() {
+        let vm = SkillListViewModel(scanner: makeMockScanner())
+
+        vm.showSettings = true
+        #expect(vm.showSettings == true)
+
+        vm.showSettings = false
+        #expect(vm.showSettings == false)
+    }
+
+    @Test("clearFavorites from settings resets favorites and store")
+    func clearFavoritesFromSettingsResets() {
+        let store = InMemoryKeyValueStore()
+        let skills = [makeSkill(name: "commit"), makeSkill(name: "tdd")]
+        let vm = SkillListViewModel(scanner: makeMockScanner(skills: skills), store: store)
+        vm.scan()
+
+        vm.toggleFavorite(skills[0])
+        vm.toggleFavorite(skills[1])
+        #expect(vm.hasFavorites == true)
+
+        vm.clearFavorites()
+
+        #expect(vm.hasFavorites == false)
+        #expect(vm.favoriteNames.isEmpty)
+        #expect(store.array(forKey: Constants.favoritesKey) == nil)
+    }
 }
