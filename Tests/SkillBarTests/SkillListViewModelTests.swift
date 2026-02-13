@@ -669,4 +669,171 @@ struct SkillListViewModelTests {
         #expect(vm.favoriteNames.isEmpty)
         #expect(store.array(forKey: Constants.favoritesKey) == nil)
     }
+
+    // MARK: - Detail File Navigation
+
+    @Test("selectSkillForDetail initializes detailFileStack with skill's filePath")
+    func selectSkillInitsStack() {
+        let skill = makeSkill(name: "commit")
+        let vm = SkillListViewModel(scanner: makeMockScanner(skills: [skill]))
+        vm.scan()
+
+        vm.selectSkillForDetail(skill)
+
+        #expect(vm.detailFileStack == [skill.filePath])
+        #expect(vm.currentDetailFilePath == skill.filePath)
+    }
+
+    @Test("navigateToFile pushes path onto stack")
+    func navigateToFilePushes() {
+        let fs = MockFileSystemProvider()
+        fs.files["/path/commit/SKILL.md"] = "# Commit"
+        fs.files["/path/commit/rules/3d.md"] = "# 3D Rules"
+        let skill = makeSkill(name: "commit")
+        let vm = SkillListViewModel(scanner: makeMockScanner(skills: [skill]), fileSystem: fs)
+        vm.scan()
+
+        vm.selectSkillForDetail(skill)
+        vm.navigateToFile("/path/commit/rules/3d.md")
+
+        #expect(vm.detailFileStack.count == 2)
+        #expect(vm.currentDetailFilePath == "/path/commit/rules/3d.md")
+    }
+
+    @Test("navigateToFile is no-op for nonexistent path")
+    func navigateToFileNoOpForMissing() {
+        let fs = MockFileSystemProvider()
+        fs.files["/path/commit/SKILL.md"] = "# Commit"
+        let skill = makeSkill(name: "commit")
+        let vm = SkillListViewModel(scanner: makeMockScanner(skills: [skill]), fileSystem: fs)
+        vm.scan()
+
+        vm.selectSkillForDetail(skill)
+        vm.navigateToFile("/nonexistent/file.md")
+
+        #expect(vm.detailFileStack.count == 1)
+    }
+
+    @Test("navigateBack pops last entry from stack")
+    func navigateBackPops() {
+        let fs = MockFileSystemProvider()
+        fs.files["/path/commit/SKILL.md"] = "# Commit"
+        fs.files["/path/commit/sub.md"] = "# Sub"
+        let skill = makeSkill(name: "commit")
+        let vm = SkillListViewModel(scanner: makeMockScanner(skills: [skill]), fileSystem: fs)
+        vm.scan()
+
+        vm.selectSkillForDetail(skill)
+        vm.navigateToFile("/path/commit/sub.md")
+        #expect(vm.detailFileStack.count == 2)
+
+        vm.navigateBack()
+
+        #expect(vm.detailFileStack.count == 1)
+        #expect(vm.currentDetailFilePath == skill.filePath)
+    }
+
+    @Test("navigateBack is no-op when stack has single entry")
+    func navigateBackNoOpAtRoot() {
+        let skill = makeSkill(name: "commit")
+        let vm = SkillListViewModel(scanner: makeMockScanner(skills: [skill]))
+        vm.scan()
+
+        vm.selectSkillForDetail(skill)
+        vm.navigateBack()
+
+        #expect(vm.detailFileStack.count == 1)
+    }
+
+    @Test("navigateToBreadcrumb truncates stack to index+1")
+    func navigateToBreadcrumbTruncates() {
+        let fs = MockFileSystemProvider()
+        fs.files["/a/SKILL.md"] = "a"
+        fs.files["/a/b.md"] = "b"
+        fs.files["/a/c.md"] = "c"
+        let skill = Skill(name: "test", description: "", source: .local, filePath: "/a/SKILL.md")
+        let vm = SkillListViewModel(scanner: makeMockScanner(skills: [skill]), fileSystem: fs)
+        vm.scan()
+
+        vm.selectSkillForDetail(skill)
+        vm.navigateToFile("/a/b.md")
+        vm.navigateToFile("/a/c.md")
+        #expect(vm.detailFileStack.count == 3)
+
+        vm.navigateToBreadcrumb(at: 0)
+
+        #expect(vm.detailFileStack.count == 1)
+        #expect(vm.currentDetailFilePath == "/a/SKILL.md")
+    }
+
+    @Test("canNavigateBack is false with single stack entry")
+    func canNavigateBackFalseAtRoot() {
+        let skill = makeSkill(name: "commit")
+        let vm = SkillListViewModel(scanner: makeMockScanner(skills: [skill]))
+        vm.scan()
+
+        vm.selectSkillForDetail(skill)
+
+        #expect(vm.canNavigateBack == false)
+    }
+
+    @Test("canNavigateBack is true with multiple stack entries")
+    func canNavigateBackTrueWithMultiple() {
+        let fs = MockFileSystemProvider()
+        fs.files["/path/commit/SKILL.md"] = "# Commit"
+        fs.files["/path/commit/sub.md"] = "# Sub"
+        let skill = makeSkill(name: "commit")
+        let vm = SkillListViewModel(scanner: makeMockScanner(skills: [skill]), fileSystem: fs)
+        vm.scan()
+
+        vm.selectSkillForDetail(skill)
+        vm.navigateToFile("/path/commit/sub.md")
+
+        #expect(vm.canNavigateBack == true)
+    }
+
+    @Test("detailBreadcrumbs maps stack to filenames")
+    func detailBreadcrumbsMapFilenames() {
+        let fs = MockFileSystemProvider()
+        fs.files["/path/commit/SKILL.md"] = "# Commit"
+        fs.files["/path/commit/rules/3d.md"] = "# 3D"
+        let skill = makeSkill(name: "commit")
+        let vm = SkillListViewModel(scanner: makeMockScanner(skills: [skill]), fileSystem: fs)
+        vm.scan()
+
+        vm.selectSkillForDetail(skill)
+        vm.navigateToFile("/path/commit/rules/3d.md")
+
+        #expect(vm.detailBreadcrumbs == ["SKILL.md", "3d.md"])
+    }
+
+    @Test("dismissDetail clears detailFileStack")
+    func dismissDetailClearsStack() {
+        let skill = makeSkill(name: "commit")
+        let vm = SkillListViewModel(scanner: makeMockScanner(skills: [skill]))
+        vm.scan()
+
+        vm.selectSkillForDetail(skill)
+        #expect(!vm.detailFileStack.isEmpty)
+
+        vm.dismissDetail()
+
+        #expect(vm.detailFileStack.isEmpty)
+    }
+
+    @Test("readCurrentDetailContent reads from current stack top")
+    func readCurrentDetailContentReadsStackTop() {
+        let fs = MockFileSystemProvider()
+        fs.files["/path/commit/SKILL.md"] = "# Main"
+        fs.files["/path/commit/sub.md"] = "# Sub File"
+        let skill = makeSkill(name: "commit")
+        let vm = SkillListViewModel(scanner: makeMockScanner(skills: [skill]), fileSystem: fs)
+        vm.scan()
+
+        vm.selectSkillForDetail(skill)
+        vm.navigateToFile("/path/commit/sub.md")
+
+        let content = vm.readCurrentDetailContent()
+        #expect(content == "# Sub File")
+    }
 }

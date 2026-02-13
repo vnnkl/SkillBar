@@ -5,8 +5,10 @@ import Foundation
 final class SkillListViewModel {
     private(set) var skills: [Skill] = []
     private(set) var groupedSkills: [SkillSource: [Skill]] = [:]
+    private(set) var packageGroupedSkills: [String: [Skill]] = [:]
     private(set) var recentlyCopiedSkillId: Skill.ID?
     private(set) var selectedSkill: Skill?
+    var detailFileStack: [String] = []
     var showSettings: Bool = false
     var favoriteNames: Set<String> = []
     var selectedIndex: Int? = nil
@@ -22,7 +24,7 @@ final class SkillListViewModel {
 
     private let scanner: SkillScanning
     private let clipboard: ClipboardProvider
-    private let fileSystem: FileSystemProvider
+    let fileSystem: FileSystemProvider
     let store: KeyValueStore
     private var clearCopyTask: Task<Void, Never>?
     private var fileWatcher: FileWatching?
@@ -31,6 +33,12 @@ final class SkillListViewModel {
 
     var orderedSources: [SkillSource] {
         SkillSource.allCases.filter { groupedSkills[$0] != nil }
+    }
+
+    /// Package names in display order: alphabetical, with nil-package skills under "Standalone"
+    var orderedPackages: [String] {
+        let keys = packageGroupedSkills.keys.sorted()
+        return keys
     }
 
     init(
@@ -52,10 +60,12 @@ final class SkillListViewModel {
 
     func selectSkillForDetail(_ skill: Skill) {
         selectedSkill = skill
+        detailFileStack = [skill.filePath]
     }
 
     func dismissDetail() {
         selectedSkill = nil
+        detailFileStack = []
     }
 
     func readSkillContent(_ skill: Skill) -> String {
@@ -96,11 +106,13 @@ final class SkillListViewModel {
         guard let scanned = try? scanner.scan() else {
             skills = []
             groupedSkills = [:]
+            packageGroupedSkills = [:]
             return
         }
 
         skills = scanned
         groupedSkills = buildGroupedSkills(from: scanned)
+        packageGroupedSkills = buildPackageGroupedSkills(from: scanned)
     }
 
     // MARK: - Private
@@ -114,6 +126,20 @@ final class SkillListViewModel {
         }
         for (source, items) in groups {
             groups[source] = items.sorted { $0.name < $1.name }
+        }
+        return groups
+    }
+
+    private func buildPackageGroupedSkills(from skills: [Skill]) -> [String: [Skill]] {
+        var groups: [String: [Skill]] = [:]
+        for skill in skills {
+            let key = skill.package ?? Constants.standalonePackageKey
+            var group = groups[key, default: []]
+            group.append(skill)
+            groups[key] = group
+        }
+        for (key, items) in groups {
+            groups[key] = items.sorted { $0.displayName < $1.displayName }
         }
         return groups
     }
