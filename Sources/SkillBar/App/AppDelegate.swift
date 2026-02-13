@@ -1,4 +1,5 @@
 import AppKit
+import Carbon.HIToolbox
 import SwiftUI
 
 @MainActor
@@ -6,13 +7,22 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
     private(set) var statusItem: NSStatusItem?
     private(set) var popover: NSPopover?
     private(set) var viewModel: SkillListViewModel?
+    private var hotkeyRef: EventHotKeyRef?
+    private var eventHandlerRef: EventHandlerRef?
 
     func applicationDidFinishLaunching(_ notification: Notification) {
         NSApp.setActivationPolicy(.accessory)
         setupViewModel()
         setupStatusItem()
         setupPopover()
+        registerHotkey()
     }
+
+    func applicationWillTerminate(_ notification: Notification) {
+        unregisterHotkey()
+    }
+
+    // MARK: - Setup
 
     private func setupViewModel() {
         let fileSystem = DefaultFileSystemProvider()
@@ -47,7 +57,62 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
         popover = pop
     }
 
-    @objc private func togglePopover() {
+    // MARK: - Global Hotkey (Carbon)
+
+    private func registerHotkey() {
+        let eventSpec = EventTypeSpec(
+            eventClass: OSType(kEventClassKeyboard),
+            eventKind: UInt32(kEventHotKeyPressed)
+        )
+
+        // Install a Carbon event handler that dispatches back to the main actor
+        let selfPtr = Unmanaged.passUnretained(self).toOpaque()
+        var handlerRef: EventHandlerRef?
+        InstallEventHandler(
+            GetApplicationEventTarget(),
+            { _, event, userData -> OSStatus in
+                guard let userData else { return OSStatus(eventNotHandledErr) }
+                let delegate = Unmanaged<AppDelegate>.fromOpaque(userData).takeUnretainedValue()
+                DispatchQueue.main.async {
+                    delegate.togglePopover()
+                }
+                return noErr
+            },
+            1,
+            [eventSpec],
+            selfPtr,
+            &handlerRef
+        )
+        eventHandlerRef = handlerRef
+
+        // Register the hotkey
+        let hotkeyID = Constants.hotkeyID
+        var ref: EventHotKeyRef?
+        RegisterEventHotKey(
+            Constants.carbonHotkeyKeyCode,
+            Constants.carbonHotkeyModifiers,
+            hotkeyID,
+            GetApplicationEventTarget(),
+            0,
+            &ref
+        )
+        hotkeyRef = ref
+    }
+
+    private func unregisterHotkey() {
+        if let ref = hotkeyRef {
+            UnregisterEventHotKey(ref)
+            hotkeyRef = nil
+        }
+        if let handler = eventHandlerRef {
+            RemoveEventHandler(handler)
+            eventHandlerRef = nil
+        }
+    }
+
+    // MARK: - Toggle
+
+    @objc func togglePopover() {
         guard let popover, let button = statusItem?.button else { return }
         if popover.isShown {
             popover.performClose(nil)

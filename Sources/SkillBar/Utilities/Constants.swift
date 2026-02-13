@@ -8,6 +8,11 @@ enum Constants {
     static let hotkeyKeyCode: UInt16 = UInt16(kVK_ANSI_K)
     static let hotkeyModifiers: NSEvent.ModifierFlags = [.command, .shift]
 
+    // Carbon hotkey constants
+    static let carbonHotkeyKeyCode: UInt32 = UInt32(kVK_ANSI_K)
+    static let carbonHotkeyModifiers: UInt32 = UInt32(cmdKey | shiftKey)
+    static let hotkeyID = EventHotKeyID(signature: OSType(0x534B4252), id: 1) // "SKBR"
+
     static let debounceInterval: TimeInterval = 0.5
 
     static var scanDirectories: [String] {
