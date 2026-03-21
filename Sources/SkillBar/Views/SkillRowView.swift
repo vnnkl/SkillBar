@@ -5,6 +5,7 @@ struct SkillRowView: View {
     let isCopied: Bool
     let isFavorite: Bool
     let isDetailSelected: Bool
+    var tags: [String] = []
     let onTap: () -> Void
     let onCopy: () -> Void
     let onToggleFavorite: () -> Void
@@ -31,6 +32,20 @@ struct SkillRowView: View {
                         .font(.caption)
                         .foregroundStyle(.secondary)
                         .lineLimit(1)
+                }
+
+                if !tags.isEmpty {
+                    HStack(spacing: 3) {
+                        ForEach(tags.prefix(3), id: \.self) { tag in
+                            TagChipView(text: tag)
+                        }
+                        if tags.count > 3 {
+                            Text("+\(tags.count - 3)")
+                                .font(.system(size: 9, weight: .medium, design: .monospaced))
+                                .foregroundStyle(.tertiary)
+                        }
+                    }
+                    .lineLimit(1)
                 }
             }
 

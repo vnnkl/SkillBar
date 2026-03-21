@@ -7,6 +7,9 @@ struct SkillDetailView: View {
     let currentFilePath: String
     let breadcrumbs: [String]
     let canNavigateBack: Bool
+    var tags: [String] = []
+    var onAddTag: ((String) -> Void)?
+    var onRemoveTag: ((String) -> Void)?
     let onNavigateToFile: (String) -> Void
     let onNavigateBack: () -> Void
     let onBreadcrumbTap: (Int) -> Void
@@ -14,6 +17,7 @@ struct SkillDetailView: View {
 
     @State private var collapsedSections: Set<Int> = []
     @State private var lastFilePath: String = ""
+    @State private var newTagText = ""
 
     private var strippedContent: String {
         MarkdownStripper.stripFrontmatter(content)
@@ -48,6 +52,10 @@ struct SkillDetailView: View {
                 breadcrumbBar
             }
             Divider()
+            if onAddTag != nil || !tags.isEmpty {
+                tagsSection
+                Divider()
+            }
             ScrollView {
                 LazyVStack(alignment: .leading, spacing: 0) {
                     ForEach(sections) { section in
@@ -170,6 +178,46 @@ struct SkillDetailView: View {
             .padding(.vertical, 6)
         }
         .background(.ultraThinMaterial.opacity(0.5))
+    }
+
+    // MARK: - Tags
+
+    private var tagsSection: some View {
+        VStack(alignment: .leading, spacing: 6) {
+            Text("Tags")
+                .font(.system(size: 10, weight: .semibold, design: .monospaced))
+                .textCase(.uppercase)
+                .tracking(0.8)
+                .foregroundStyle(.secondary)
+
+            if !tags.isEmpty {
+                ScrollView(.horizontal, showsIndicators: false) {
+                    HStack(spacing: 4) {
+                        ForEach(tags, id: \.self) { tag in
+                            TagChipView(text: tag, onRemove: { onRemoveTag?(tag) })
+                        }
+                    }
+                }
+            }
+
+            if onAddTag != nil {
+                TextField("Add tag...", text: $newTagText)
+                    .textFieldStyle(.plain)
+                    .font(.system(size: 11, design: .monospaced))
+                    .padding(.horizontal, 6)
+                    .padding(.vertical, 4)
+                    .background(.ultraThinMaterial)
+                    .clipShape(RoundedRectangle(cornerRadius: 4))
+                    .onSubmit {
+                        let tag = newTagText
+                        guard !tag.isEmpty else { return }
+                        onAddTag?(tag)
+                        newTagText = ""
+                    }
+            }
+        }
+        .padding(.horizontal, 12)
+        .padding(.vertical, 8)
     }
 
     // MARK: - Section Rendering

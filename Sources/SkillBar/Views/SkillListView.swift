@@ -15,8 +15,10 @@ struct SkillListView: View {
                     SettingsView(
                         hasFavorites: viewModel.hasFavorites,
                         hasUsageData: viewModel.hasUsageData,
+                        hasAnyTags: !viewModel.allTags.isEmpty,
                         onClearFavorites: { viewModel.clearFavorites() },
                         onClearUsageData: { viewModel.clearUsageData() },
+                        onClearAllTags: { viewModel.clearAllTags() },
                         onBack: { viewModel.showSettings = false }
                     )
                 } else {
@@ -33,6 +35,9 @@ struct SkillListView: View {
                     currentFilePath: viewModel.currentDetailFilePath ?? skill.filePath,
                     breadcrumbs: viewModel.detailBreadcrumbs,
                     canNavigateBack: viewModel.canNavigateBack,
+                    tags: viewModel.tags(for: skill),
+                    onAddTag: { viewModel.addTag($0, to: skill) },
+                    onRemoveTag: { viewModel.removeTag($0, from: skill) },
                     onNavigateToFile: { viewModel.navigateToFile($0) },
                     onNavigateBack: { viewModel.navigateBack() },
                     onBreadcrumbTap: { viewModel.navigateToBreadcrumb(at: $0) },
@@ -91,6 +96,14 @@ struct SkillListView: View {
             header
             searchField
             filterPills
+            if !viewModel.allTags.isEmpty {
+                TagFilterBar(
+                    tags: viewModel.allTags,
+                    activeFilters: viewModel.activeTagFilters,
+                    onToggle: { viewModel.toggleTagFilter($0) },
+                    onClearAll: { viewModel.clearTagFilters() }
+                )
+            }
             skillList
             footer
         }
@@ -335,6 +348,7 @@ struct SkillListView: View {
             isCopied: viewModel.recentlyCopiedSkillId == skill.id,
             isFavorite: viewModel.isFavorite(skill),
             isDetailSelected: isDetailTarget,
+            tags: viewModel.tags(for: skill),
             onTap: { viewModel.selectSkillForDetail(skill) },
             onCopy: { viewModel.copySkill(skill) },
             onToggleFavorite: { viewModel.toggleFavorite(skill) }

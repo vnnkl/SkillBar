@@ -4,8 +4,10 @@ import SwiftUI
 struct SettingsView: View {
     let hasFavorites: Bool
     let hasUsageData: Bool
+    let hasAnyTags: Bool
     let onClearFavorites: () -> Void
     let onClearUsageData: () -> Void
+    let onClearAllTags: () -> Void
     let onBack: () -> Void
 
     @State private var launchAtLogin = false
@@ -53,6 +55,8 @@ struct SettingsView: View {
             launchAtLoginSection
             Divider()
             favoritesSection
+            Divider()
+            tagsSection
             Divider()
             usageDataSection
         }
@@ -102,6 +106,25 @@ struct SettingsView: View {
             .disabled(!hasFavorites)
 
             Text("Remove all pinned skills from the favorites section.")
+                .font(.caption)
+                .foregroundStyle(.secondary)
+        }
+    }
+
+    private var tagsSection: some View {
+        VStack(alignment: .leading, spacing: 6) {
+            Button(action: onClearAllTags) {
+                HStack(spacing: 4) {
+                    Image(systemName: "tag.slash")
+                        .font(.caption)
+                    Text("Clear All Tags")
+                }
+            }
+            .buttonStyle(.plain)
+            .foregroundStyle(hasAnyTags ? .red : .secondary)
+            .disabled(!hasAnyTags)
+
+            Text("Remove all tags from all skills.")
                 .font(.caption)
                 .foregroundStyle(.secondary)
         }
