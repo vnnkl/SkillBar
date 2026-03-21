@@ -34,6 +34,7 @@ enum Constants {
     static let skillFileName = "SKILL.md"
 
     // Persistence keys
+    static let launchModeKey = "launchMode"
     static let collapsedPackagesKey = "collapsedPackageNames"
     static let usageRecordsKey = "skillUsageRecords"
     static let skillTagsKey = "skillTags"

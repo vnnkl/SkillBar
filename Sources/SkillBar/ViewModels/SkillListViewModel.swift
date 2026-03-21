@@ -13,6 +13,7 @@ final class SkillListViewModel {
     var favoriteNames: Set<String> = []
     var collapsedPackageNames: Set<String> = []
     var skillTags: [String: [String]] = [:]
+    var launchMode: LaunchMode = .copyOnly
     var activeTagFilters: Set<String> = []
     var selectedIndex: Int? = nil
     var activeSourceFilter: SkillSource? = nil
@@ -59,6 +60,10 @@ final class SkillListViewModel {
         }
         if let stored = store.array(forKey: Constants.collapsedPackagesKey) {
             self.collapsedPackageNames = Set(stored)
+        }
+        if let stored = store.array(forKey: Constants.launchModeKey)?.first,
+           let mode = LaunchMode(rawValue: stored) {
+            self.launchMode = mode
         }
         if let data = store.data(forKey: Constants.skillTagsKey) {
             self.skillTags = (try? JSONDecoder().decode([String: [String]].self, from: data)) ?? [:]
