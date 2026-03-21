@@ -30,7 +30,7 @@ final class SkillListViewModel {
 
     private let scanner: SkillScanning
     private let clipboard: ClipboardProvider
-    private let terminalLauncher: TerminalLaunching
+    let terminalLauncher: TerminalLaunching
     let fileSystem: FileSystemProvider
     let store: KeyValueStore
     private var clearCopyTask: Task<Void, Never>?

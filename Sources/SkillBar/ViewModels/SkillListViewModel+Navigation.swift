@@ -29,7 +29,7 @@ extension SkillListViewModel {
     func confirmSelection() {
         let list = navigationList
         guard let index = selectedIndex, index < list.count else { return }
-        copySkill(list[index])
+        launchSkill(list[index])
     }
 
     func clearSelection() {

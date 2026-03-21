@@ -357,7 +357,7 @@ struct SkillListView: View {
             isDetailSelected: isDetailTarget,
             tags: viewModel.tags(for: skill),
             onTap: { viewModel.selectSkillForDetail(skill) },
-            onCopy: { viewModel.copySkill(skill) },
+            onCopy: { viewModel.launchSkill(skill) },
             onToggleFavorite: { viewModel.toggleFavorite(skill) }
         )
         .listRowBackground(
