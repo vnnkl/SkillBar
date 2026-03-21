@@ -3,7 +3,6 @@ import SwiftUI
 struct SkillListView: View {
     @Bindable var viewModel: SkillListViewModel
     @FocusState private var isSearchFocused: Bool
-    @State private var collapsedPackages: Set<String> = []
 
     private var showDetailPanel: Bool {
         viewModel.selectedSkill != nil && !viewModel.showSettings
@@ -52,7 +51,6 @@ struct SkillListView: View {
             viewModel.scan()
             viewModel.clearSelection()
             isSearchFocused = true
-            initializeCollapseState()
         }
         .onChange(of: viewModel.filteredOrderedPackages) { _, _ in }
         .onKeyPress(.downArrow) {
@@ -84,10 +82,6 @@ struct SkillListView: View {
             }
             return .ignored
         }
-    }
-
-    private func initializeCollapseState() {
-        collapsedPackages = []
     }
 
     private var listContent: some View {
@@ -154,8 +148,8 @@ struct SkillListView: View {
     // MARK: - Filter Pills
 
     private var allPackagesCollapsed: Bool {
-        let pkgs = Set(viewModel.filteredOrderedPackages)
-        return !pkgs.isEmpty && pkgs.isSubset(of: collapsedPackages)
+        let pkgs = viewModel.filteredOrderedPackages
+        return !pkgs.isEmpty && pkgs.allSatisfy { viewModel.isPackageCollapsed($0) }
     }
 
     private var filterPills: some View {
@@ -186,9 +180,9 @@ struct SkillListView: View {
 
             Button(action: {
                 if allPackagesCollapsed {
-                    collapsedPackages = []
+                    viewModel.expandAllPackages()
                 } else {
-                    collapsedPackages = Set(viewModel.filteredOrderedPackages)
+                    viewModel.setAllPackagesCollapsed(true, packages: viewModel.filteredOrderedPackages)
                 }
             }) {
                 Image(systemName: allPackagesCollapsed
@@ -267,16 +261,12 @@ struct SkillListView: View {
     // MARK: - Package Section
 
     private func packageSection(pkg: String, skills: [Skill]) -> some View {
-        let isExpanded = !collapsedPackages.contains(pkg)
+        let isExpanded = !viewModel.isPackageCollapsed(pkg)
         return DisclosureGroup(
             isExpanded: Binding(
                 get: { isExpanded },
-                set: { expanded in
-                    if expanded {
-                        collapsedPackages.remove(pkg)
-                    } else {
-                        collapsedPackages.insert(pkg)
-                    }
+                set: { _ in
+                    viewModel.togglePackageCollapse(pkg)
                 }
             )
         ) {
@@ -287,11 +277,7 @@ struct SkillListView: View {
             sectionHeader(pkg, count: skills.count)
                 .contentShape(Rectangle())
                 .onTapGesture {
-                    if isExpanded {
-                        collapsedPackages.insert(pkg)
-                    } else {
-                        collapsedPackages.remove(pkg)
-                    }
+                    viewModel.togglePackageCollapse(pkg)
                 }
         }
     }

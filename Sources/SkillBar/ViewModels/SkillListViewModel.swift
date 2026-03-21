@@ -11,6 +11,7 @@ final class SkillListViewModel {
     var detailFileStack: [String] = []
     var showSettings: Bool = false
     var favoriteNames: Set<String> = []
+    var collapsedPackageNames: Set<String> = []
     var selectedIndex: Int? = nil
     var activeSourceFilter: SkillSource? = nil
 
@@ -53,6 +54,9 @@ final class SkillListViewModel {
         self.store = store
         if let stored = store.array(forKey: Constants.favoritesKey) {
             self.favoriteNames = Set(stored)
+        }
+        if let stored = store.array(forKey: Constants.collapsedPackagesKey) {
+            self.collapsedPackageNames = Set(stored)
         }
     }
 
