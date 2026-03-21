@@ -3,7 +3,9 @@ import SwiftUI
 
 struct SettingsView: View {
     let hasFavorites: Bool
+    let hasUsageData: Bool
     let onClearFavorites: () -> Void
+    let onClearUsageData: () -> Void
     let onBack: () -> Void
 
     @State private var launchAtLogin = false
@@ -51,6 +53,8 @@ struct SettingsView: View {
             launchAtLoginSection
             Divider()
             favoritesSection
+            Divider()
+            usageDataSection
         }
         .padding(12)
     }
@@ -98,6 +102,25 @@ struct SettingsView: View {
             .disabled(!hasFavorites)
 
             Text("Remove all pinned skills from the favorites section.")
+                .font(.caption)
+                .foregroundStyle(.secondary)
+        }
+    }
+
+    private var usageDataSection: some View {
+        VStack(alignment: .leading, spacing: 6) {
+            Button(action: onClearUsageData) {
+                HStack(spacing: 4) {
+                    Image(systemName: "chart.bar.xaxis")
+                        .font(.caption)
+                    Text("Reset Usage Data")
+                }
+            }
+            .buttonStyle(.plain)
+            .foregroundStyle(hasUsageData ? .red : .secondary)
+            .disabled(!hasUsageData)
+
+            Text("Clear recently and frequently used skill tracking data.")
                 .font(.caption)
                 .foregroundStyle(.secondary)
         }

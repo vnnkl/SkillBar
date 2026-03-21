@@ -82,6 +82,7 @@ final class SkillListViewModel {
 
     func copySkill(_ skill: Skill) {
         clipboard.copy(skill.slashCommand)
+        recordUsage(skill)
         recentlyCopiedSkillId = skill.id
         clearCopyTask?.cancel()
         clearCopyTask = Task {

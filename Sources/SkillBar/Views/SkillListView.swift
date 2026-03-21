@@ -14,7 +14,9 @@ struct SkillListView: View {
                 if viewModel.showSettings {
                     SettingsView(
                         hasFavorites: viewModel.hasFavorites,
+                        hasUsageData: viewModel.hasUsageData,
                         onClearFavorites: { viewModel.clearFavorites() },
+                        onClearUsageData: { viewModel.clearUsageData() },
                         onBack: { viewModel.showSettings = false }
                     )
                 } else {
@@ -215,6 +217,24 @@ struct SkillListView: View {
                             }
                         } header: {
                             sectionHeader("Favorites", icon: "star.fill", count: viewModel.filteredFavoritedSkills.count)
+                        }
+                    }
+                    if !viewModel.filteredRecentlyUsedSkills.isEmpty {
+                        Section {
+                            ForEach(viewModel.filteredRecentlyUsedSkills) { skill in
+                                skillRow(skill)
+                            }
+                        } header: {
+                            sectionHeader("Recently Used", icon: "clock.arrow.circlepath", count: viewModel.filteredRecentlyUsedSkills.count)
+                        }
+                    }
+                    if !viewModel.filteredFrequentlyUsedSkills.isEmpty {
+                        Section {
+                            ForEach(viewModel.filteredFrequentlyUsedSkills) { skill in
+                                skillRow(skill)
+                            }
+                        } header: {
+                            sectionHeader("Frequently Used", icon: "flame.fill", count: viewModel.filteredFrequentlyUsedSkills.count)
                         }
                     }
                     ForEach(viewModel.filteredOrderedPackages, id: \.self) { pkg in
