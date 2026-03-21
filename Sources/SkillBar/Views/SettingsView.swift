@@ -5,6 +5,8 @@ struct SettingsView: View {
     let hasFavorites: Bool
     let hasUsageData: Bool
     let hasAnyTags: Bool
+    let launchMode: LaunchMode
+    let onSetLaunchMode: (LaunchMode) -> Void
     let onClearFavorites: () -> Void
     let onClearUsageData: () -> Void
     let onClearAllTags: () -> Void
@@ -52,6 +54,8 @@ struct SettingsView: View {
 
     private var settingsContent: some View {
         VStack(alignment: .leading, spacing: 16) {
+            launchModeSection
+            Divider()
             launchAtLoginSection
             Divider()
             favoritesSection
@@ -61,6 +65,39 @@ struct SettingsView: View {
             usageDataSection
         }
         .padding(12)
+    }
+
+    private var launchModeSection: some View {
+        VStack(alignment: .leading, spacing: 6) {
+            Text("Skill Action")
+                .font(.system(.body, weight: .medium))
+
+            Picker("", selection: Binding(
+                get: { launchMode },
+                set: { onSetLaunchMode($0) }
+            )) {
+                ForEach(LaunchMode.allCases, id: \.self) { mode in
+                    Text(mode.displayName).tag(mode)
+                }
+            }
+            .pickerStyle(.radioGroup)
+            .labelsHidden()
+
+            Text(launchModeHelpText)
+                .font(.caption)
+                .foregroundStyle(.secondary)
+        }
+    }
+
+    private var launchModeHelpText: String {
+        switch launchMode {
+        case .copyOnly:
+            "Copy the /command to clipboard. You paste it manually."
+        case .paste:
+            "Paste the /command into the last active terminal window."
+        case .pasteAndExecute:
+            "Paste and execute the /command in the last active terminal. Use with caution."
+        }
     }
 
     private var launchAtLoginSection: some View {

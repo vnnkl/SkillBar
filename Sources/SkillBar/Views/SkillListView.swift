@@ -16,6 +16,8 @@ struct SkillListView: View {
                         hasFavorites: viewModel.hasFavorites,
                         hasUsageData: viewModel.hasUsageData,
                         hasAnyTags: !viewModel.allTags.isEmpty,
+                        launchMode: viewModel.launchMode,
+                        onSetLaunchMode: { viewModel.setLaunchMode($0) },
                         onClearFavorites: { viewModel.clearFavorites() },
                         onClearUsageData: { viewModel.clearUsageData() },
                         onClearAllTags: { viewModel.clearAllTags() },
