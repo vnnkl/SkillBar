@@ -11,8 +11,9 @@ extension SkillListViewModel {
 
     var filteredFavoritedSkills: [Skill] {
         let names = favoriteNames
-        return filteredSkills
-            .filter { names.contains($0.name) }
+        return skills
+            .filter { names.contains($0.name) && matchesSourceFilter($0) }
+            .filter { searchText.isEmpty || SearchRanker.matches($0, query: searchText) }
             .sorted { $0.name < $1.name }
     }
 

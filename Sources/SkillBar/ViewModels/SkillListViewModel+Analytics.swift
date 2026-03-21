@@ -35,8 +35,10 @@ extension SkillListViewModel {
     }
 
     var filteredRecentlyUsedSkills: [Skill] {
-        let allowed = Set(filteredSkills.map(\.id))
-        return recentlyUsedSkills.filter { allowed.contains($0.id) }
+        recentlyUsedSkills.filter { skill in
+            matchesSourceFilter(skill)
+                && (searchText.isEmpty || SearchRanker.matches(skill, query: searchText))
+        }
     }
 
     // MARK: - Frequently Used
@@ -51,8 +53,10 @@ extension SkillListViewModel {
     }
 
     var filteredFrequentlyUsedSkills: [Skill] {
-        let allowed = Set(filteredSkills.map(\.id))
-        return frequentlyUsedSkills.filter { allowed.contains($0.id) }
+        frequentlyUsedSkills.filter { skill in
+            matchesSourceFilter(skill)
+                && (searchText.isEmpty || SearchRanker.matches(skill, query: searchText))
+        }
     }
 
     // MARK: - Clear

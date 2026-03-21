@@ -3,7 +3,9 @@ import Foundation
 extension SkillListViewModel {
 
     var filteredSkills: [Skill] {
-        skills.filter { matchesSearch($0) && matchesSourceFilter($0) }
+        let base = skills.filter { matchesSourceFilter($0) }
+        guard !searchText.isEmpty else { return base }
+        return SearchRanker.rank(base, query: searchText)
     }
 
     var filteredCount: Int { filteredSkills.count }
@@ -44,17 +46,9 @@ extension SkillListViewModel {
         filteredPackageGroupedSkills.keys.sorted()
     }
 
-    // MARK: - Private
+    // MARK: - Internal
 
-    private func matchesSearch(_ skill: Skill) -> Bool {
-        guard !searchText.isEmpty else { return true }
-        let query = searchText.lowercased()
-        return skill.name.lowercased().contains(query)
-            || skill.description.lowercased().contains(query)
-            || (skill.package?.lowercased().contains(query) ?? false)
-    }
-
-    private func matchesSourceFilter(_ skill: Skill) -> Bool {
+    func matchesSourceFilter(_ skill: Skill) -> Bool {
         guard let filter = activeSourceFilter else { return true }
         return skill.source == filter
     }
