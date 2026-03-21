@@ -7,7 +7,7 @@ extension SkillListViewModel {
     }
 
     func addTag(_ tag: String, to skill: Skill) {
-        let trimmed = tag.trimmingCharacters(in: .whitespaces)
+        let trimmed = tag.trimmingCharacters(in: .whitespacesAndNewlines)
         guard !trimmed.isEmpty else { return }
 
         let truncated = String(trimmed.prefix(Constants.maxTagLength))
@@ -70,11 +70,15 @@ extension SkillListViewModel {
             }
         }
         skillTags = tags
+        var filters = activeTagFilters
+        filters.remove(tag)
+        activeTagFilters = filters
         persistTags()
     }
 
     func clearAllTags() {
         skillTags = [:]
+        activeTagFilters = []
         store.removeObject(forKey: Constants.skillTagsKey)
     }
 

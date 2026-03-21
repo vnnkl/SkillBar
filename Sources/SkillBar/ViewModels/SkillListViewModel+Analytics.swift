@@ -36,7 +36,7 @@ extension SkillListViewModel {
 
     var filteredRecentlyUsedSkills: [Skill] {
         recentlyUsedSkills.filter { skill in
-            matchesSourceFilter(skill)
+            matchesSourceFilter(skill) && matchesTagFilter(skill)
                 && (searchText.isEmpty || SearchRanker.matches(skill, query: searchText))
         }
     }
@@ -54,7 +54,7 @@ extension SkillListViewModel {
 
     var filteredFrequentlyUsedSkills: [Skill] {
         frequentlyUsedSkills.filter { skill in
-            matchesSourceFilter(skill)
+            matchesSourceFilter(skill) && matchesTagFilter(skill)
                 && (searchText.isEmpty || SearchRanker.matches(skill, query: searchText))
         }
     }

@@ -12,7 +12,7 @@ extension SkillListViewModel {
     var filteredFavoritedSkills: [Skill] {
         let names = favoriteNames
         return skills
-            .filter { names.contains($0.name) && matchesSourceFilter($0) }
+            .filter { names.contains($0.name) && matchesSourceFilter($0) && matchesTagFilter($0) }
             .filter { searchText.isEmpty || SearchRanker.matches($0, query: searchText) }
             .sorted { $0.name < $1.name }
     }

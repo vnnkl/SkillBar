@@ -217,9 +217,16 @@ struct SkillListView: View {
 
     // MARK: - Skill List
 
+    private var hasAnyVisibleContent: Bool {
+        !viewModel.filteredSkills.isEmpty
+            || !viewModel.filteredFavoritedSkills.isEmpty
+            || !viewModel.filteredRecentlyUsedSkills.isEmpty
+            || !viewModel.filteredFrequentlyUsedSkills.isEmpty
+    }
+
     private var skillList: some View {
         Group {
-            if viewModel.filteredSkills.isEmpty {
+            if !hasAnyVisibleContent {
                 emptyState
             } else {
                 List {
