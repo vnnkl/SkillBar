@@ -3,7 +3,7 @@ import Foundation
 extension SkillListViewModel {
 
     var filteredSkills: [Skill] {
-        let base = skills.filter { matchesSourceFilter($0) }
+        let base = skills.filter { matchesSourceFilter($0) && matchesTagFilter($0) }
         guard !searchText.isEmpty else { return base }
         return SearchRanker.rank(base, query: searchText)
     }
@@ -51,5 +51,11 @@ extension SkillListViewModel {
     func matchesSourceFilter(_ skill: Skill) -> Bool {
         guard let filter = activeSourceFilter else { return true }
         return skill.source == filter
+    }
+
+    func matchesTagFilter(_ skill: Skill) -> Bool {
+        guard !activeTagFilters.isEmpty else { return true }
+        let skillTagSet = Set(tags(for: skill))
+        return activeTagFilters.isSubset(of: skillTagSet)
     }
 }
