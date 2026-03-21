@@ -32,4 +32,16 @@ enum Constants {
     }
 
     static let skillFileName = "SKILL.md"
+
+    // Persistence keys
+    static let collapsedPackagesKey = "collapsedPackageNames"
+    static let usageRecordsKey = "skillUsageRecords"
+    static let skillTagsKey = "skillTags"
+
+    // Usage tracking limits
+    static let recentLimit = 10
+    static let frequentThreshold = 5
+    static let frequentLimit = 5
+    static let maxTagLength = 30
+    static let maxTagsPerSkill = 5
 }

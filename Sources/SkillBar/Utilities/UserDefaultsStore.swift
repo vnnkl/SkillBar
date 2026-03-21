@@ -15,6 +15,14 @@ final class UserDefaultsStore: KeyValueStore, @unchecked Sendable {
         defaults.set(value, forKey: key)
     }
 
+    func data(forKey key: String) -> Data? {
+        defaults.data(forKey: key)
+    }
+
+    func set(_ value: Data, forKey key: String) {
+        defaults.set(value, forKey: key)
+    }
+
     func removeObject(forKey key: String) {
         defaults.removeObject(forKey: key)
     }

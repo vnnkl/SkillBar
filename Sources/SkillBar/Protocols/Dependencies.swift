@@ -34,6 +34,8 @@ protocol ClipboardProvider: Sendable {
 protocol KeyValueStore: Sendable {
     func array(forKey key: String) -> [String]?
     func set(_ value: [String], forKey key: String)
+    func data(forKey key: String) -> Data?
+    func set(_ value: Data, forKey key: String)
     func removeObject(forKey key: String)
 }
 
