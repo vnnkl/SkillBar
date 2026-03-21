@@ -10,6 +10,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
     private var fileWatcher: FileWatcher?
     private var hotkeyRef: EventHotKeyRef?
     private var eventHandlerRef: EventHandlerRef?
+    private var previousApp: NSRunningApplication?
 
     func applicationDidFinishLaunching(_ notification: Notification) {
         NSApp.setActivationPolicy(.accessory)
@@ -18,6 +19,13 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
         setupPopover()
         setupFileWatcher()
         registerHotkey()
+
+        viewModel?.closePopover = { [weak self] in
+            self?.popover?.performClose(nil)
+        }
+        viewModel?.capturedTerminalBundleID = { [weak self] in
+            self?.previousApp?.bundleIdentifier
+        }
     }
 
     func applicationWillTerminate(_ notification: Notification) {
@@ -140,6 +148,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
         if popover.isShown {
             popover.performClose(nil)
         } else {
+            previousApp = NSWorkspace.shared.frontmostApplication
             popover.show(relativeTo: button.bounds, of: button, preferredEdge: .minY)
             NSApp.activate()
         }

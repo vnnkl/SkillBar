@@ -17,6 +17,8 @@ final class SkillListViewModel {
     var activeTagFilters: Set<String> = []
     var selectedIndex: Int? = nil
     var activeSourceFilter: SkillSource? = nil
+    var closePopover: (() -> Void)?
+    var capturedTerminalBundleID: (() -> String?)?
 
     var searchText: String = "" {
         didSet {
@@ -28,6 +30,7 @@ final class SkillListViewModel {
 
     private let scanner: SkillScanning
     private let clipboard: ClipboardProvider
+    private let terminalLauncher: TerminalLaunching
     let fileSystem: FileSystemProvider
     let store: KeyValueStore
     private var clearCopyTask: Task<Void, Never>?
@@ -49,10 +52,12 @@ final class SkillListViewModel {
         scanner: SkillScanning,
         clipboard: ClipboardProvider = Clipboard(),
         fileSystem: FileSystemProvider = DefaultFileSystemProvider(),
-        store: KeyValueStore = UserDefaultsStore()
+        store: KeyValueStore = UserDefaultsStore(),
+        terminalLauncher: TerminalLaunching = TerminalLauncher()
     ) {
         self.scanner = scanner
         self.clipboard = clipboard
+        self.terminalLauncher = terminalLauncher
         self.fileSystem = fileSystem
         self.store = store
         if let stored = store.array(forKey: Constants.favoritesKey) {
