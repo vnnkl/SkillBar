@@ -22,6 +22,13 @@ extension SkillListViewModel {
             ))
         }
         saveUsageRecords(records)
+
+        // Record workflow transition
+        if let previous = lastLaunchedSkillName, previous != skill.name {
+            recordTransition(from: previous, to: skill.name)
+        }
+        lastLaunchedSkillName = skill.name
+        store.set([skill.name], forKey: Constants.lastLaunchedSkillKey)
     }
 
     // MARK: - Recently Used
@@ -63,10 +70,12 @@ extension SkillListViewModel {
 
     var hasUsageData: Bool {
         !loadUsageRecords().isEmpty
+            || store.data(forKey: Constants.transitionMatrixKey) != nil
     }
 
     func clearUsageData() {
         store.removeObject(forKey: Constants.usageRecordsKey)
+        clearWorkflowMemory()
     }
 
     // MARK: - Private

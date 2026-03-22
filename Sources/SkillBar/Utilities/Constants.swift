@@ -43,6 +43,12 @@ enum Constants {
     static let recentLimit = 10
     static let frequentThreshold = 5
     static let frequentLimit = 5
+
+    // Workflow memory
+    static let transitionMatrixKey = "skillTransitionMatrix"
+    static let lastLaunchedSkillKey = "lastLaunchedSkillName"
+    static let transitionThreshold = 3
+    static let nextUpLimit = 2
     static let maxTagLength = 30
     static let maxTagsPerSkill = 5
 }

@@ -14,6 +14,7 @@ final class SkillListViewModel {
     var collapsedPackageNames: Set<String> = []
     var skillTags: [String: [String]] = [:]
     var launchMode: LaunchMode = .copyOnly
+    var lastLaunchedSkillName: String?
     var activeTagFilters: Set<String> = []
     var selectedIndex: Int? = nil
     var activeSourceFilter: SkillSource? = nil
@@ -72,6 +73,9 @@ final class SkillListViewModel {
         }
         if let data = store.data(forKey: Constants.skillTagsKey) {
             self.skillTags = (try? JSONDecoder().decode([String: [String]].self, from: data)) ?? [:]
+        }
+        if let stored = store.array(forKey: Constants.lastLaunchedSkillKey)?.first {
+            self.lastLaunchedSkillName = stored
         }
     }
 
