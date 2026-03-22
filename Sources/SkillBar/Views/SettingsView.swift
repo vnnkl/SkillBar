@@ -14,6 +14,8 @@ struct SettingsView: View {
 
     @State private var launchAtLogin = false
     @State private var launchAtLoginError: String?
+    @State private var latestVersion: String?
+    @State private var checkingUpdate = false
 
     private var isAppBundle: Bool {
         Bundle.main.bundlePath.hasSuffix(".app")
@@ -25,11 +27,14 @@ struct SettingsView: View {
             Divider()
             settingsContent
             Spacer()
+            Divider()
+            versionFooter
         }
         .onAppear {
             if isAppBundle {
                 launchAtLogin = SMAppService.mainApp.status == .enabled
             }
+            checkForUpdate()
         }
     }
 
@@ -183,6 +188,65 @@ struct SettingsView: View {
             Text("Clear recently and frequently used skill tracking data.")
                 .font(.caption)
                 .foregroundStyle(.secondary)
+        }
+    }
+
+    // MARK: - Version Footer
+
+    private var currentVersion: String {
+        Bundle.main.infoDictionary?["CFBundleShortVersionString"] as? String ?? "dev"
+    }
+
+    private var updateAvailable: Bool {
+        guard let latest = latestVersion else { return false }
+        return latest != currentVersion && latest > currentVersion
+    }
+
+    private var versionFooter: some View {
+        HStack {
+            Text("v\(currentVersion)")
+                .font(.system(size: 10, weight: .medium, design: .monospaced))
+                .foregroundStyle(.tertiary)
+
+            if updateAvailable, let latest = latestVersion {
+                Text("v\(latest) available")
+                    .font(.system(size: 10, weight: .medium, design: .monospaced))
+                    .foregroundStyle(.orange)
+
+                Button(action: {
+                    NSWorkspace.shared.open(URL(string: "https://github.com/vnnkl/SkillBar/releases/latest")!)
+                }) {
+                    Text("Update")
+                        .font(.system(size: 10, weight: .semibold))
+                        .foregroundStyle(Color.accentColor)
+                }
+                .buttonStyle(.plain)
+            }
+
+            Spacer()
+        }
+        .padding(.horizontal, 12)
+        .padding(.vertical, 6)
+        .background(.ultraThinMaterial)
+    }
+
+    // MARK: - Update Check
+
+    private func checkForUpdate() {
+        guard !checkingUpdate else { return }
+        checkingUpdate = true
+        Task.detached {
+            guard let url = URL(string: "https://api.github.com/repos/vnnkl/SkillBar/releases/latest") else { return }
+            var request = URLRequest(url: url)
+            request.setValue("application/vnd.github+json", forHTTPHeaderField: "Accept")
+            request.timeoutInterval = 5
+            guard let (data, _) = try? await URLSession.shared.data(for: request),
+                  let json = try? JSONSerialization.jsonObject(with: data) as? [String: Any],
+                  let tagName = json["tag_name"] as? String else { return }
+            let version = tagName.hasPrefix("v") ? String(tagName.dropFirst()) : tagName
+            await MainActor.run {
+                latestVersion = version
+            }
         }
     }
 
