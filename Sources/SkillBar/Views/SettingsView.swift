@@ -185,7 +185,7 @@ struct SettingsView: View {
             .foregroundStyle(hasUsageData ? .red : .secondary)
             .disabled(!hasUsageData)
 
-            Text("Clear recently and frequently used skill tracking data.")
+            Text("Clear recently used, frequently used, and workflow suggestion data.")
                 .font(.caption)
                 .foregroundStyle(.secondary)
         }

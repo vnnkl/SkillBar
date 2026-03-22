@@ -225,6 +225,7 @@ struct SkillListView: View {
             || !viewModel.filteredFavoritedSkills.isEmpty
             || !viewModel.filteredRecentlyUsedSkills.isEmpty
             || !viewModel.filteredFrequentlyUsedSkills.isEmpty
+            || !viewModel.suggestedNextSkills.isEmpty
     }
 
     private var skillList: some View {
@@ -233,6 +234,15 @@ struct SkillListView: View {
                 emptyState
             } else {
                 List {
+                    if !viewModel.suggestedNextSkills.isEmpty {
+                        Section {
+                            ForEach(viewModel.suggestedNextSkills) { skill in
+                                skillRow(skill)
+                            }
+                        } header: {
+                            sectionHeader("Next Up", icon: "arrow.right.circle.fill", count: viewModel.suggestedNextSkills.count)
+                        }
+                    }
                     if !viewModel.filteredFavoritedSkills.isEmpty {
                         Section {
                             ForEach(viewModel.filteredFavoritedSkills) { skill in
