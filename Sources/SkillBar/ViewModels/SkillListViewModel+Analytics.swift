@@ -71,6 +71,7 @@ extension SkillListViewModel {
     var hasUsageData: Bool {
         !loadUsageRecords().isEmpty
             || store.data(forKey: Constants.transitionMatrixKey) != nil
+            || lastLaunchedSkillName != nil
     }
 
     func clearUsageData() {

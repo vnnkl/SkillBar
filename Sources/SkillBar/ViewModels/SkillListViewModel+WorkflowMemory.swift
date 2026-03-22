@@ -23,7 +23,6 @@ extension SkillListViewModel {
         return transitions
             .filter { $0.value >= Constants.transitionThreshold }
             .sorted { $0.value > $1.value }
-            .prefix(Constants.nextUpLimit + 2)
             .compactMap { skillsByName[$0.key] }
             .filter { matchesSourceFilter($0) && matchesTagFilter($0) }
             .filter { searchText.isEmpty || SearchRanker.matches($0, query: searchText) }
