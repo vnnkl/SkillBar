@@ -1,6 +1,6 @@
 cask "skillbar" do
-  version "0.2.0"
-  sha256 "515ed1315968a4ea9bd88c8eb2ed247ec30c467d3ed66a1226feceffa007026d"
+  version "0.2.1"
+  sha256 "c4c696d1bf32e3a07b13553f151f237288ae1caf84334d90b36b1d25e474a08d"
 
   url "https://github.com/vnnkl/SkillBar/releases/download/v#{version}/SkillBar-v#{version}.zip"
   name "SkillBar"
