@@ -8,12 +8,23 @@ protocol TerminalLaunching: Sendable {
 @MainActor
 final class TerminalLauncher: TerminalLaunching, @unchecked Sendable {
 
+    private static let knownTerminals: Set<String> = [
+        "com.googlecode.iterm2",
+        "com.apple.Terminal",
+        "dev.warp.Warp-Stable",
+        "net.kovidgoyal.kitty",
+    ]
+
     func launch(command: String, mode: LaunchMode, terminalBundleID: String?) async {
         guard mode != .copyOnly, let bundleID = terminalBundleID else { return }
-        activateApp(bundleID: bundleID)
+        guard Self.knownTerminals.contains(bundleID) else { return }
         let execute = mode == .pasteAndExecute
         if let script = buildScript(bundleID: bundleID, command: command, execute: execute) {
+            activateApp(bundleID: bundleID)
             runOsascript(script)
+        } else {
+            // Known terminal but no script for this mode — activate so user can paste
+            activateApp(bundleID: bundleID)
         }
     }
 

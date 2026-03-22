@@ -94,9 +94,9 @@ struct SettingsView: View {
         case .copyOnly:
             "Copy the /command to clipboard. You paste it manually."
         case .paste:
-            "Paste the /command into the last active terminal window."
+            "Paste the /command into the last active terminal. Works with iTerm2. Terminal.app and Warp fall back to copy + activate."
         case .pasteAndExecute:
-            "Paste and execute the /command in the last active terminal. Use with caution."
+            "Paste and run the /command in the last active terminal. Works with iTerm2 and Terminal.app. Use with caution."
         }
     }
 

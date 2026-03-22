@@ -18,6 +18,7 @@ struct SkillDetailView: View {
     @State private var collapsedSections: Set<Int> = []
     @State private var lastFilePath: String = ""
     @State private var newTagText = ""
+    @State private var lastSkillId: String = ""
 
     private var strippedContent: String {
         MarkdownStripper.stripFrontmatter(content)
@@ -72,8 +73,15 @@ struct SkillDetailView: View {
                 lastFilePath = newPath
             }
         }
+        .onChange(of: skill.id) { _, newId in
+            if newId != lastSkillId {
+                newTagText = ""
+                lastSkillId = newId
+            }
+        }
         .onAppear {
             lastFilePath = currentFilePath
+            lastSkillId = skill.id
         }
     }
 
@@ -208,16 +216,24 @@ struct SkillDetailView: View {
                     .padding(.vertical, 4)
                     .background(.ultraThinMaterial)
                     .clipShape(RoundedRectangle(cornerRadius: 4))
+                    .overlay(
+                        RoundedRectangle(cornerRadius: 4)
+                            .strokeBorder(Color.primary.opacity(0.08), lineWidth: 0.5)
+                    )
                     .onSubmit {
-                        let tag = newTagText
-                        guard !tag.isEmpty else { return }
-                        onAddTag?(tag)
-                        newTagText = ""
+                        submitTag()
                     }
             }
         }
         .padding(.horizontal, 12)
         .padding(.vertical, 8)
+    }
+
+    private func submitTag() {
+        let tag = newTagText.trimmingCharacters(in: .whitespacesAndNewlines)
+        guard !tag.isEmpty else { return }
+        onAddTag?(tag)
+        newTagText = ""
     }
 
     // MARK: - Section Rendering

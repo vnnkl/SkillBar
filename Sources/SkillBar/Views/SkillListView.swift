@@ -71,6 +71,7 @@ struct SkillListView: View {
             return .handled
         }
         .onKeyPress(.return) {
+            guard !showDetailPanel else { return .ignored }
             viewModel.confirmSelection()
             return .handled
         }
