@@ -1,8 +1,8 @@
 cask "skillbar" do
-  version "0.1.0"
-  sha256 "b49cc6a99942dfdbd4e0d7273160ddc231e04a0099af3e52bbdda1cdffd03677"
+  version "0.2.0"
+  sha256 "515ed1315968a4ea9bd88c8eb2ed247ec30c467d3ed66a1226feceffa007026d"
 
-  url "https://github.com/vnnkl/SkillBar/releases/download/v#{version}/SkillBar-#{version}.zip"
+  url "https://github.com/vnnkl/SkillBar/releases/download/v#{version}/SkillBar-v#{version}.zip"
   name "SkillBar"
   desc "Menu bar app for browsing Claude Code skills"
   homepage "https://github.com/vnnkl/SkillBar"
