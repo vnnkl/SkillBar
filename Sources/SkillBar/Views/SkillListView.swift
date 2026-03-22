@@ -359,6 +359,7 @@ struct SkillListView: View {
             isFavorite: viewModel.isFavorite(skill),
             isDetailSelected: isDetailTarget,
             tags: viewModel.tags(for: skill),
+            launchMode: viewModel.launchMode,
             onTap: { viewModel.selectSkillForDetail(skill) },
             onCopy: { viewModel.launchSkill(skill) },
             onToggleFavorite: { viewModel.toggleFavorite(skill) }

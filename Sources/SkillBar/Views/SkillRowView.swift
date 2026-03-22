@@ -6,6 +6,7 @@ struct SkillRowView: View {
     let isFavorite: Bool
     let isDetailSelected: Bool
     var tags: [String] = []
+    var launchMode: LaunchMode = .copyOnly
     let onTap: () -> Void
     let onCopy: () -> Void
     let onToggleFavorite: () -> Void
@@ -59,12 +60,13 @@ struct SkillRowView: View {
             }
 
             Button(action: onCopy) {
-                Image(systemName: "doc.on.doc")
+                Image(systemName: launchIcon)
                     .font(.caption)
                     .foregroundStyle(.secondary)
                     .frame(width: Constants.buttonMinSize, height: Constants.buttonMinSize)
             }
             .buttonStyle(GlassButtonStyle())
+            .help(launchMode == .copyOnly ? "Copy" : launchMode == .paste ? "Paste into terminal" : "Run in terminal")
 
             Text(skill.source.displayName)
                 .font(.caption2)
@@ -94,6 +96,14 @@ struct SkillRowView: View {
         )
         .animation(.easeInOut(duration: 0.2), value: isCopied)
         .animation(.easeInOut(duration: 0.2), value: isFavorite)
+    }
+
+    private var launchIcon: String {
+        switch launchMode {
+        case .copyOnly: "doc.on.doc"
+        case .paste: "terminal"
+        case .pasteAndExecute: "play.fill"
+        }
     }
 
     private var rowBackground: AnyShapeStyle {
